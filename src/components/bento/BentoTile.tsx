@@ -1,5 +1,9 @@
 import type { BentoTile as BentoTileData, TileSize } from "@/types/bento";
 import { assertNever } from "@/utils/assert-never";
+import { TextTileContent } from "./content/TextTileContent";
+import { LinkTileContent } from "./content/LinkTileContent";
+import { MapTileContent } from "./content/MapTileContent";
+import { ImageTileContent } from "./content/ImageTileContent";
 
 type BentoTileProps = {
   tile: BentoTileData;
@@ -15,43 +19,16 @@ const sizeClasses: Record<TileSize, string> = {
 function renderTileContent(tile: BentoTileData) {
   switch (tile.type) {
     case "text":
-      return <p className="text-neutral-300">{tile.text}</p>;
+      return <TextTileContent tile={tile}/>
 
     case "image":
-      return (
-        <div>
-          <p className="text-neutral-300">Image: {tile.imageUrl}</p>
-
-          <p className="mt-2 text-sm text-neutral-500">Alt: {tile.alt}</p>
-        </div>
-      );
+        return <ImageTileContent tile={tile}/>
 
     case "link":
-      return (
-        <div>
-          <p className="text-neutral-300">{tile.description}</p>
-
-          <a
-            href={tile.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-block underline"
-          >
-            Open link
-          </a>
-        </div>
-      );
+      return <LinkTileContent tile={tile}/>
 
     case "map":
-      return (
-        <div>
-          <p className="text-neutral-300">{tile.label}</p>
-
-          <p className="mt-2 text-sm text-neutral-500">
-            {tile.latitude}, {tile.longitude}
-          </p>
-        </div>
-      );
+      return <MapTileContent tile={tile}/>
 
     default:
       return assertNever(tile);
