@@ -16,7 +16,7 @@ export const initialTiles: BentoTile[] = [
   {
     id: "location",
     type: "map",
-    size: "square",
+    size: "tall",
     title: "Novi Sad, Serbia",
   },
 ];

@@ -7,7 +7,7 @@ type BentoGridProps = {
 
 export function BentoGrid({ tiles }: BentoGridProps) {
   return (
-    <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <section className="grid auto-rows-[12rem] grid-cols-1 gap-4 md:grid-cols-4">
       {tiles.map((tile) => (
         <BentoTile key={tile.id} tile={tile} />
       ))}
