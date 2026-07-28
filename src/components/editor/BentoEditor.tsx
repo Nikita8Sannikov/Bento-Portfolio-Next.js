@@ -3,6 +3,7 @@
 import type { BentoTile } from "@/types/bento";
 import { useState } from "react";
 import { BentoGrid } from "../bento/BentoGrid";
+import { AddTileForm } from "./AddTileForm";
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
@@ -10,16 +11,15 @@ type BentoEditorProps = {
 
 export function BentoEditor({ initialTiles }: BentoEditorProps) {
   const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
 
-  function handleAddTile() {
-    const newTile: BentoTile = {
-      id: crypto.randomUUID(),
-      type: "text",
-      size: "square",
-      title: "New tile",
-    };
+function handleCreateTile(tile: BentoTile) {
+    setTiles((currentTiles) => [
+      ...currentTiles,
+      tile,
+    ]);
 
-    setTiles((currentTiles) => [...currentTiles, newTile]);
+    setIsAddFormOpen(false);
   }
 
   function handleDeleteTile(id: string) {
@@ -37,12 +37,22 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
 
         <button
           type="button"
-          onClick={handleAddTile}
+          onClick={() =>
+            setIsAddFormOpen((currentValue) => !currentValue)
+          }
           className="rounded-xl bg-white px-4 py-2 font-medium text-black"
         >
-          Add tile
+          {isAddFormOpen ? "Close form" : "Add tile"}
         </button>
       </header>
+
+
+      {isAddFormOpen && (
+        <AddTileForm
+          onCreate={handleCreateTile}
+          onCancel={() => setIsAddFormOpen(false)}
+        />
+      )}
 
       <BentoGrid tiles={tiles} onDeleteTile={handleDeleteTile} />
     </>
