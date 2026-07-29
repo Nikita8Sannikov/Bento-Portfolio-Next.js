@@ -4,6 +4,7 @@ import type { BentoTile } from "@/types/bento";
 import { useState } from "react";
 import { BentoGrid } from "../bento/BentoGrid";
 import { TileForm } from "./TileForm";
+import { Modal } from "../ui/Modal";
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
@@ -29,6 +30,12 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
     setTiles((currentTiles) => currentTiles.filter((tile) => tile.id !== id));
   }
 
+  function handleCloseForm() {
+    setFormState({
+      mode: "closed",
+    });
+  }
+
   function handleSubmitTile(tile: BentoTile) {
     if (formState.mode === "edit") {
       setTiles((currentTiles) =>
@@ -42,9 +49,7 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
       setTiles((currentTiles) => [...currentTiles, tile]);
     }
 
-    setFormState({
-      mode: "closed",
-    });
+    handleCloseForm();
   }
 
   return (
@@ -69,18 +74,44 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
         </button>
       </header>
 
-      {formState.mode !== "closed" && (
+      {/* {formState.mode !== "closed" && (
         <TileForm
           key={formState.mode === "edit" ? formState.tile.id : "create"}
           initialTile={formState.mode === "edit" ? formState.tile : undefined}
           onSubmit={handleSubmitTile}
-          onCancel={() =>
-            setFormState({
-              mode: "closed",
-            })
-          }
+          onCancel={handleCloseForm}
         />
-      )}
+      )} */}
+
+      {formState.mode !== "closed" && (
+  <Modal
+    title={
+      formState.mode === "edit"
+        ? `Edit “${formState.tile.title}”`
+        : "Add new tile"
+    }
+    onClose={
+      handleCloseForm
+    }
+  >
+    <TileForm
+      key={
+        formState.mode === "edit"
+          ? formState.tile.id
+          : "create"
+      }
+      initialTile={
+        formState.mode === "edit"
+          ? formState.tile
+          : undefined
+      }
+      onSubmit={handleSubmitTile}
+      onCancel={
+        handleCloseForm
+      }
+    />
+  </Modal>
+)}
 
       <BentoGrid
         tiles={tiles}
