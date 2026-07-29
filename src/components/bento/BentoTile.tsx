@@ -7,6 +7,7 @@ import { ImageTileContent } from "./content/ImageTileContent";
 
 type BentoTileProps = {
   tile: BentoTileData;
+  onEdit: (tile: BentoTileData) => void;
   onDelete: (id: string) => void;
 };
 
@@ -19,37 +20,48 @@ const sizeClasses: Record<TileSize, string> = {
 function renderTileContent(tile: BentoTileData) {
   switch (tile.type) {
     case "text":
-      return <TextTileContent tile={tile}/>
+      return <TextTileContent tile={tile} />;
 
     case "image":
-        return <ImageTileContent tile={tile}/>
+      return <ImageTileContent tile={tile} />;
 
     case "link":
-      return <LinkTileContent tile={tile}/>
+      return <LinkTileContent tile={tile} />;
 
     case "map":
-      return <MapTileContent tile={tile}/>
+      return <MapTileContent tile={tile} />;
 
     default:
       return assertNever(tile);
   }
 }
 
-export function BentoTile({ tile, onDelete }: BentoTileProps) {
+export function BentoTile({ tile, onEdit, onDelete }: BentoTileProps) {
   const sizeClass = sizeClasses[tile.size];
 
   return (
     <article
       className={`relative min-h-48 overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 p-6 ${sizeClass}`}
     >
-      <button
-        type="button"
-        onClick={() => onDelete(tile.id)}
-        className="absolute right-4 top-4 rounded-lg px-2 py-1 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-white"
-        aria-label={`Delete ${tile.title}`}
-      >
-        Delete
-      </button>
+      <div className="absolute right-4 top-4 z-10 flex gap-2">
+        <button
+          type="button"
+          onClick={() => onEdit(tile)}
+          className="rounded-lg px-2 py-1 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-white"
+          aria-label={`Edit ${tile.title}`}
+        >
+          Edit
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(tile.id)}
+          className="rounded-lg px-2 py-1 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-white"
+          aria-label={`Delete ${tile.title}`}
+        >
+          Delete
+        </button>
+      </div>
       <p className="text-sm uppercase tracking-wide text-neutral-400">
         {tile.type}
       </p>

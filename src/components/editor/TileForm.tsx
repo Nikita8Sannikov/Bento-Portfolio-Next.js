@@ -1,8 +1,9 @@
 import { BentoTile, TileSize, TileType } from "@/types/bento";
 import { useState } from "react";
 
-type AddTileFormProps = {
-  onCreate: (tile: BentoTile) => void;
+type TileFormProps = {
+  initialTile?: BentoTile;
+  onSubmit: (tile: BentoTile) => void;
   onCancel: () => void;
 };
 
@@ -10,19 +11,35 @@ const tileTypes: TileType[] = ["text", "image", "link", "map"];
 
 const tileSizes: TileSize[] = ["square", "wide", "tall"];
 
-export function AddTileForm({ onCreate, onCancel }: AddTileFormProps) {
-  const [type, setType] = useState<TileType>("text");
-  const [size, setSize] = useState<TileSize>("square");
-  const [title, setTitle] = useState("");
+export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
+  const [type, setType] = useState<TileType>(initialTile?.type ?? "text");
+  const [size, setSize] = useState<TileSize>(initialTile?.size ?? "square");
+  const [title, setTitle] = useState(initialTile?.title ?? "");
 
-  const [text, setText] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [alt, setAlt] = useState("");
-  const [url, setUrl] = useState("");
-  const [description, setDescription] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [label, setLabel] = useState("");
+  const [text, setText] = useState(
+    initialTile?.type === "text" ? initialTile.text : "",
+  );
+  const [imageUrl, setImageUrl] = useState(
+    initialTile?.type === "image" ? initialTile.imageUrl : "",
+  );
+  const [alt, setAlt] = useState(
+    initialTile?.type === "image" ? initialTile.alt : "",
+  );
+  const [url, setUrl] = useState(
+    initialTile?.type === "link" ? initialTile.url : "",
+  );
+  const [description, setDescription] = useState(
+    initialTile?.type === "link" ? initialTile.description : "",
+  );
+  const [latitude, setLatitude] = useState(
+    initialTile?.type === "map" ? String(initialTile.latitude) : "",
+  );
+  const [longitude, setLongitude] = useState(
+    initialTile?.type === "map" ? String(initialTile.longitude) : "",
+  );
+  const [label, setLabel] = useState(
+    initialTile?.type === "map" ? initialTile.label : "",
+  );
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,40 +51,34 @@ export function AddTileForm({ onCreate, onCancel }: AddTileFormProps) {
     }
 
     if (type === "text" && !text.trim()) {
-        return;
-      }
-      
+      return;
+    }
+
+    if (type === "image" && (!imageUrl.trim() || !alt.trim())) {
+      return;
+    }
+
+    if (type === "link" && (!url.trim() || !description.trim())) {
+      return;
+    }
+
+    if (type === "map") {
+      const parsedLatitude = Number(latitude);
+      const parsedLongitude = Number(longitude);
+
       if (
-        type === "image" &&
-        (!imageUrl.trim() || !alt.trim())
+        !label.trim() ||
+        latitude.trim() === "" ||
+        longitude.trim() === "" ||
+        Number.isNaN(parsedLatitude) ||
+        Number.isNaN(parsedLongitude)
       ) {
         return;
       }
-      
-      if (
-        type === "link" &&
-        (!url.trim() || !description.trim())
-      ) {
-        return;
-      }
-      
-      if (type === "map") {
-        const parsedLatitude = Number(latitude);
-        const parsedLongitude = Number(longitude);
-      
-        if (
-          !label.trim() ||
-          latitude.trim() === "" ||
-          longitude.trim() === "" ||
-          Number.isNaN(parsedLatitude) ||
-          Number.isNaN(parsedLongitude)
-        ) {
-          return;
-        }
-      }
+    }
 
     const baseTile = {
-      id: crypto.randomUUID(),
+      id: initialTile?.id ?? crypto.randomUUID(),
       title: trimmedTitle,
       size,
     };
@@ -112,7 +123,7 @@ export function AddTileForm({ onCreate, onCancel }: AddTileFormProps) {
         break;
     }
 
-    onCreate(newTile);
+    onSubmit(newTile)
   }
 
   return (
@@ -121,8 +132,12 @@ export function AddTileForm({ onCreate, onCancel }: AddTileFormProps) {
       className="mb-8 rounded-3xl border border-neutral-800 bg-neutral-900 p-6"
     >
       <div>
-        <p className="text-sm text-neutral-400">Create title</p>
-        <h2 className="mt-1 text-2xl font-semibold">Add new tile</h2>
+        <p className="text-sm text-neutral-400">
+          {initialTile ? "Edit title" : "Create title"}
+        </p>
+        <h2 className="mt-1 text-2xl font-semibold">
+          {initialTile ? `Editing "${initialTile.title}"` : "Add new tile"}
+        </h2>
       </div>
 
       <fieldset className="mb-6">
@@ -179,7 +194,7 @@ export function AddTileForm({ onCreate, onCancel }: AddTileFormProps) {
           placeholder="About me"
           className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
         />
-        
+
         {type === "text" && (
           <div className="mb-6">
             <label htmlFor="tile-text" className="mb-2 block font-medium">
@@ -349,7 +364,7 @@ export function AddTileForm({ onCreate, onCancel }: AddTileFormProps) {
           disabled={!title.trim()}
           className="rounded-xl bg-white px-4 py-2 font-medium text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Create tile
+          {initialTile ? "Save changes" : "Create tile"}
         </button>
       </div>
     </form>

@@ -16,6 +16,7 @@ export function ImageTileContent({ tile }: ImageTileContentProps) {
           fill
           sizes="(min-width: 768px) 50vw, 100vw"
           className="object-cover"
+          loading="eager"
         />
       ) : (
         <img

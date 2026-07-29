@@ -3,27 +3,48 @@
 import type { BentoTile } from "@/types/bento";
 import { useState } from "react";
 import { BentoGrid } from "../bento/BentoGrid";
-import { AddTileForm } from "./AddTileForm";
+import { TileForm } from "./TileForm";
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
 };
 
+type TileFormState =
+  | { mode: "closed" }
+  | { mode: "create" }
+  | { mode: "edit"; tile: BentoTile };
+
 export function BentoEditor({ initialTiles }: BentoEditorProps) {
   const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [formState, setFormState] = useState<TileFormState>({ mode: "closed" });
 
-function handleCreateTile(tile: BentoTile) {
-    setTiles((currentTiles) => [
-      ...currentTiles,
+  function handleEditTile(tile: BentoTile) {
+    setFormState({
+      mode: "edit",
       tile,
-    ]);
-
-    setIsAddFormOpen(false);
+    });
   }
 
   function handleDeleteTile(id: string) {
     setTiles((currentTiles) => currentTiles.filter((tile) => tile.id !== id));
+  }
+
+  function handleSubmitTile(tile: BentoTile) {
+    if (formState.mode === "edit") {
+      setTiles((currentTiles) =>
+        currentTiles.map((currentTile) =>
+          currentTile.id === tile.id ? tile : currentTile,
+        ),
+      );
+    }
+
+    if (formState.mode === "create") {
+      setTiles((currentTiles) => [...currentTiles, tile]);
+    }
+
+    setFormState({
+      mode: "closed",
+    });
   }
 
   return (
@@ -38,23 +59,34 @@ function handleCreateTile(tile: BentoTile) {
         <button
           type="button"
           onClick={() =>
-            setIsAddFormOpen((currentValue) => !currentValue)
+            setFormState({
+              mode: "create",
+            })
           }
           className="rounded-xl bg-white px-4 py-2 font-medium text-black"
         >
-          {isAddFormOpen ? "Close form" : "Add tile"}
+          Add tile
         </button>
       </header>
 
-
-      {isAddFormOpen && (
-        <AddTileForm
-          onCreate={handleCreateTile}
-          onCancel={() => setIsAddFormOpen(false)}
+      {formState.mode !== "closed" && (
+        <TileForm
+          key={formState.mode === "edit" ? formState.tile.id : "create"}
+          initialTile={formState.mode === "edit" ? formState.tile : undefined}
+          onSubmit={handleSubmitTile}
+          onCancel={() =>
+            setFormState({
+              mode: "closed",
+            })
+          }
         />
       )}
 
-      <BentoGrid tiles={tiles} onDeleteTile={handleDeleteTile} />
+      <BentoGrid
+        tiles={tiles}
+        onEditTile={handleEditTile}
+        onDeleteTile={handleDeleteTile}
+      />
     </>
   );
 }
