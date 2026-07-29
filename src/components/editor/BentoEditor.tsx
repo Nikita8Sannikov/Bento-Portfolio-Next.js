@@ -2,7 +2,8 @@
 
 import type { BentoTile } from "@/types/bento";
 import { useState } from "react";
-import { BentoGrid } from "../bento/BentoGrid";
+// import { BentoGrid } from "../bento/BentoGrid";
+import dynamic from "next/dynamic";
 import { TileForm } from "./TileForm";
 import { Modal } from "../ui/Modal";
 
@@ -15,9 +16,30 @@ type TileFormState =
   | { mode: "create" }
   | { mode: "edit"; tile: BentoTile };
 
+  const BentoGrid = dynamic(
+    () =>
+      import("@/components/bento/BentoGrid").then(
+        (module) => module.BentoGrid,
+      ),
+    {
+      ssr: false,
+      loading: () => (
+        <div className="grid auto-rows-[12rem] grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="animate-pulse rounded-3xl bg-neutral-900 md:col-span-2" />
+          <div className="animate-pulse rounded-3xl bg-neutral-900" />
+          <div className="animate-pulse rounded-3xl bg-neutral-900" />
+        </div>
+      ),
+    },
+  );
+
 export function BentoEditor({ initialTiles }: BentoEditorProps) {
   const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
   const [formState, setFormState] = useState<TileFormState>({ mode: "closed" });
+
+  function handleReorderTiles(reorderedTiles: BentoTile[]) {
+    setTiles(reorderedTiles);
+  }
 
   function handleEditTile(tile: BentoTile) {
     setFormState({
@@ -84,37 +106,26 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
       )} */}
 
       {formState.mode !== "closed" && (
-  <Modal
-    title={
-      formState.mode === "edit"
-        ? `Edit “${formState.tile.title}”`
-        : "Add new tile"
-    }
-    onClose={
-      handleCloseForm
-    }
-  >
-    <TileForm
-      key={
-        formState.mode === "edit"
-          ? formState.tile.id
-          : "create"
-      }
-      initialTile={
-        formState.mode === "edit"
-          ? formState.tile
-          : undefined
-      }
-      onSubmit={handleSubmitTile}
-      onCancel={
-        handleCloseForm
-      }
-    />
-  </Modal>
-)}
+        <Modal
+          title={
+            formState.mode === "edit"
+              ? `Edit “${formState.tile.title}”`
+              : "Add new tile"
+          }
+          onClose={handleCloseForm}
+        >
+          <TileForm
+            key={formState.mode === "edit" ? formState.tile.id : "create"}
+            initialTile={formState.mode === "edit" ? formState.tile : undefined}
+            onSubmit={handleSubmitTile}
+            onCancel={handleCloseForm}
+          />
+        </Modal>
+      )}
 
       <BentoGrid
         tiles={tiles}
+        onReorderTiles={handleReorderTiles}
         onEditTile={handleEditTile}
         onDeleteTile={handleDeleteTile}
       />
