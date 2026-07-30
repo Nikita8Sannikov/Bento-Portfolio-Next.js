@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: next-portfolio-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+      POSTGRES_DB: portfolio
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - portfolio_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  portfolio_postgres_data:
