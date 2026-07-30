@@ -1,9 +1,8 @@
 "use client";
 
-import type { BentoTile } from "@/types/bento";
+import { bentoTilesSchema, type BentoTile } from "@/types/bento";
 import { useEffect, useState } from "react";
 import { BentoGrid } from "../bento/BentoGrid";
-// import dynamic from "next/dynamic";
 import { TileForm } from "./TileForm";
 import { Modal } from "../ui/Modal";
 
@@ -18,24 +17,7 @@ type TileFormState =
   | { mode: "create" }
   | { mode: "edit"; tile: BentoTile };
 
-// const BentoGrid = dynamic(
-//   () =>
-//     import("@/components/bento/BentoGrid").then((module) => module.BentoGrid),
-//   {
-//     ssr: false,
-//     loading: () => (
-//       <div className="grid auto-rows-[12rem] grid-cols-1 gap-4 md:grid-cols-4">
-//         <div className="animate-pulse rounded-3xl bg-neutral-900 md:col-span-2" />
-//         <div className="animate-pulse rounded-3xl bg-neutral-900" />
-//         <div className="animate-pulse rounded-3xl bg-neutral-900" />
-//       </div>
-//     ),
-//   },
-// );
-
-function loadTilesFromStorage(
-  fallbackTiles: BentoTile[],
-): BentoTile[] {
+function loadTilesFromStorage(fallbackTiles: BentoTile[]): BentoTile[] {
   const savedTiles = localStorage.getItem(STORAGE_KEY);
 
   if (!savedTiles) {
@@ -43,21 +25,29 @@ function loadTilesFromStorage(
   }
 
   try {
-    return JSON.parse(savedTiles) as BentoTile[];
-  } catch (error) {
-    console.error(
-      "Failed to parse saved tiles:",
-      error,
-    );
+    const parsedValue: unknown = JSON.parse(savedTiles);
 
+    const result = bentoTilesSchema.safeParse(parsedValue);
+
+    if (!result.success) {
+      console.error("Invalid tiles in localStorage:", result.error);
+
+      localStorage.removeItem(STORAGE_KEY);
+
+      return fallbackTiles;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error("Failed to parse saved tiles:", error);
+    localStorage.removeItem(STORAGE_KEY);
     return fallbackTiles;
   }
 }
 
 export function BentoEditor({ initialTiles }: BentoEditorProps) {
-  // const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
-  const [tiles, setTiles] = useState<BentoTile[]>(
-    () => loadTilesFromStorage(initialTiles),
+  const [tiles, setTiles] = useState<BentoTile[]>(() =>
+    loadTilesFromStorage(initialTiles),
   );
   const [formState, setFormState] = useState<TileFormState>({ mode: "closed" });
 
@@ -66,10 +56,7 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
   }
 
   useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(tiles),
-    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tiles));
   }, [tiles]);
 
   function handleEditTile(tile: BentoTile) {
@@ -143,15 +130,6 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
           Add tile
         </button>
       </header>
-
-      {/* {formState.mode !== "closed" && (
-        <TileForm
-          key={formState.mode === "edit" ? formState.tile.id : "create"}
-          initialTile={formState.mode === "edit" ? formState.tile : undefined}
-          onSubmit={handleSubmitTile}
-          onCancel={handleCloseForm}
-        />
-      )} */}
 
       {formState.mode !== "closed" && (
         <Modal
