@@ -1,4 +1,5 @@
 import { BentoEditor } from "@/components/editor/BentoEditor";
+import { BentoEditorLoader } from "@/components/editor/BentoEditorLoader";
 import { initialTiles } from "@/data/initial-tiles";
 import Link from "next/link";
 
@@ -12,7 +13,8 @@ export default function AdminPage() {
           </Link>
         </nav>
 
-        <BentoEditor initialTiles={initialTiles} />
+        {/* <BentoEditor initialTiles={initialTiles} /> */}
+        <BentoEditorLoader initialTiles={initialTiles} />
       </div>
     </main>
   );
