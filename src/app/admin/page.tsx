@@ -1,20 +1,21 @@
-import { BentoEditor } from "@/components/editor/BentoEditor";
 import { BentoEditorLoader } from "@/components/editor/BentoEditorLoader";
-import { initialTiles } from "@/data/initial-tiles";
+import { getTiles } from "@/lib/tiles/get-tiles";
 import Link from "next/link";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const tiles = await getTiles();
   return (
     <main className="min-h-screen overflow-x-hidden bg-neutral-950 px-4 py-8 text-white">
       <div className="mx-auto max-w-6xl">
         <nav className="mb-6">
-          <Link href="/" className="text-sm text-neutral-400 hover:text-white">
+
+          <Link href="/" className="rounded-xl border border-neutral-700 px-4 py-2 text-sm text-neutral-400 hover:border-neutral-500 hover:text-white">
             Public portfolio
           </Link>
         </nav>
 
         {/* <BentoEditor initialTiles={initialTiles} /> */}
-        <BentoEditorLoader initialTiles={initialTiles} />
+        <BentoEditorLoader initialTiles={tiles} />
       </div>
     </main>
   );
