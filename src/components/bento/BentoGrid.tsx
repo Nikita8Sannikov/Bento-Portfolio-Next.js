@@ -24,6 +24,7 @@ import type { BentoTile as BentoTileData } from "@/types/bento";
 
 type BentoGridProps = {
   tiles: BentoTileData[];
+  isReordering: boolean;
   onReorderTiles: (tiles: BentoTileData[]) => void;
   onEditTile: (tile: BentoTileData) => void;
   onDeleteTile: (id: string) => void;
@@ -33,6 +34,7 @@ export function BentoGrid({
   tiles,
   onReorderTiles,
   onEditTile,
+  isReordering,
   onDeleteTile,
 }: BentoGridProps) {
   const sensors = useSensors(
@@ -86,6 +88,7 @@ export function BentoGrid({
             <BentoTile
               key={tile.id}
               tile={tile}
+              disabled={isReordering}
               onEdit={onEditTile}
               onDelete={onDeleteTile}
             />

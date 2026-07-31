@@ -6,11 +6,12 @@ import { tileSizeClasses } from "./tile-size-classes";
 
 type BentoTileProps = {
   tile: BentoTileData;
+  disabled?: boolean;
   onEdit: (tile: BentoTileData) => void;
   onDelete: (id: string) => void;
 };
 
-export function BentoTile({ tile, onEdit, onDelete }: BentoTileProps) {
+export function BentoTile({ tile, disabled, onEdit, onDelete }: BentoTileProps) {
   const sizeClass = tileSizeClasses[tile.size];
   const {
     attributes,
@@ -21,6 +22,7 @@ export function BentoTile({ tile, onEdit, onDelete }: BentoTileProps) {
     isDragging,
   } = useSortable({
     id: tile.id,
+    disabled,
   });
 
   const style: React.CSSProperties = {
@@ -38,6 +40,7 @@ export function BentoTile({ tile, onEdit, onDelete }: BentoTileProps) {
         <div className="absolute right-4 top-4 z-10  items-center flex gap-2">
           <button
             type="button"
+            disabled={disabled}
             {...attributes}
             {...listeners}
             className="
