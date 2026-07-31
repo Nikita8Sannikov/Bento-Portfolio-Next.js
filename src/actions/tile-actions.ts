@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { BentoTile, bentoTileSchema, bentoTilesSchema } from "@/types/bento";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 function getTileContent(tile: BentoTile) {
   switch (tile.type) {
@@ -39,6 +40,8 @@ function revalidateTilePages() {
 }
 
 export async function deleteTileAction(tileId: string): Promise<void> {
+  await requireAdmin();
+
   await prisma.tile.delete({
     where: {
       id: tileId,
@@ -49,6 +52,8 @@ export async function deleteTileAction(tileId: string): Promise<void> {
 }
 
 export async function createTileAction(input: BentoTile): Promise<void> {
+  await requireAdmin();
+
   const tile = bentoTileSchema.parse(input);
 
   const lastTile = await prisma.tile.findFirst({
@@ -76,43 +81,43 @@ export async function createTileAction(input: BentoTile): Promise<void> {
   revalidateTilePages();
 }
 
-export async function updateTileAction(
-    input: BentoTile,
-  ): Promise<void> {
-    const tile = bentoTileSchema.parse(input);
-  
-    await prisma.tile.update({
-      where: {
-        id: tile.id,
-      },
-      data: {
-        type: tile.type,
-        size: tile.size,
-        title: tile.title,
-        content: getTileContent(tile),
-      },
-    });
-  
-    revalidateTilePages();
-  }
+export async function updateTileAction(input: BentoTile): Promise<void> {
+  await requireAdmin();
 
-  export async function reorderTilesAction(
-    input: BentoTile[],
-  ): Promise<void> {
-    const tiles = bentoTilesSchema.parse(input);
-  
-    await prisma.$transaction(
-      tiles.map((tile, position) =>
-        prisma.tile.update({
-          where: {
-            id: tile.id,
-          },
-          data: {
-            position,
-          },
-        }),
-      ),
-    );
-  
-    revalidateTilePages();
-  }
+  const tile = bentoTileSchema.parse(input);
+
+  await prisma.tile.update({
+    where: {
+      id: tile.id,
+    },
+    data: {
+      type: tile.type,
+      size: tile.size,
+      title: tile.title,
+      content: getTileContent(tile),
+    },
+  });
+
+  revalidateTilePages();
+}
+
+export async function reorderTilesAction(input: BentoTile[]): Promise<void> {
+  await requireAdmin();
+
+  const tiles = bentoTilesSchema.parse(input);
+
+  await prisma.$transaction(
+    tiles.map((tile, position) =>
+      prisma.tile.update({
+        where: {
+          id: tile.id,
+        },
+        data: {
+          position,
+        },
+      }),
+    ),
+  );
+
+  revalidateTilePages();
+}
