@@ -56,6 +56,7 @@ export function BentoTile({ tile, disabled, onEdit, onDelete }: BentoTileProps) 
 
           <button
             type="button"
+            disabled={disabled}
             onClick={() => onEdit(tile)}
             className="rounded-lg px-2 py-1 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-white"
             aria-label={`Edit ${tile.title}`}
@@ -65,6 +66,7 @@ export function BentoTile({ tile, disabled, onEdit, onDelete }: BentoTileProps) 
 
           <button
             type="button"
+            disabled={disabled}
             onClick={() => onDelete(tile.id)}
             className="rounded-lg px-2 py-1 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-white"
             aria-label={`Delete ${tile.title}`}

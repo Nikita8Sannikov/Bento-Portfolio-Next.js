@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { BentoGrid } from "../bento/BentoGrid";
 import { TileForm } from "./TileForm";
 import { Modal } from "../ui/Modal";
@@ -24,27 +24,30 @@ type TileFormState =
 export function BentoEditor({ initialTiles }: BentoEditorProps) {
   const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
   const [formState, setFormState] = useState<TileFormState>({ mode: "closed" });
-  const [isReordering, setIsReordering] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleReorderTiles(reorderedTiles: BentoTile[]) {
-    if (isReordering) {
+  function handleReorderTiles(reorderedTiles: BentoTile[]) {
+    if (isPending) {
       return;
     }
 
     const previousTiles = tiles;
 
+    setErrorMessage(null);
     setTiles(reorderedTiles);
 
-    try {
-      await reorderTilesAction(reorderedTiles);
-      setIsReordering(true);
-    } catch (error) {
-      console.error("Failed to reorder tiles:", error);
+    startTransition(async () => {
+      try {
+        await reorderTilesAction(reorderedTiles);
+        // setIsReordering(true);
+      } catch (error) {
+        console.error("Failed to reorder tiles:", error);
 
-      setTiles(previousTiles);
-    } finally {
-      setIsReordering(false);
-    }
+        setTiles(previousTiles);
+        setErrorMessage("Failed to save new order");
+      }
+    });
   }
 
   function handleEditTile(tile: BentoTile) {
@@ -54,18 +57,23 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
     });
   }
 
-  async function handleDeleteTile(id: string) {
+  function handleDeleteTile(id: string) {
     const previousTiles = tiles;
+
+    setErrorMessage(null);
 
     setTiles((currentTiles) => currentTiles.filter((tile) => tile.id !== id));
 
-    try {
-      await deleteTileAction(id);
-    } catch (e) {
-      console.error("Failed to delete tile:", e);
+    startTransition(async () => {
+      try {
+        await deleteTileAction(id);
+      } catch (e) {
+        console.error("Failed to delete tile:", e);
 
-      setTiles(previousTiles);
-    }
+        setTiles(previousTiles);
+        setErrorMessage("Failed to delete tile.");
+      }
+    });
   }
 
   function handleCloseForm() {
@@ -74,9 +82,12 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
     });
   }
 
-  async function handleSaveTile(tile: BentoTile) {
+  function handleSaveTile(tile: BentoTile) {
     const previousTiles = tiles;
+    const previousFormState = formState;
     const isEditing = formState.mode === "edit";
+
+    setErrorMessage(null);
 
     if (isEditing) {
       setTiles((currentTiles) =>
@@ -90,28 +101,24 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
 
     handleCloseForm();
 
-    try {
-      if (isEditing) {
-        await updateTileAction(tile);
-      } else {
-        await createTileAction(tile);
+    startTransition(async () => {
+      try {
+        if (isEditing) {
+          await updateTileAction(tile);
+        } else {
+          await createTileAction(tile);
+        }
+      } catch (error) {
+        console.error("Failed to save tile:", error);
+
+        setTiles(previousTiles);
+        setFormState(previousFormState);
+
+        setErrorMessage(
+          isEditing ? "Failed to save changes:" : "Failed to create tile:",
+        );
       }
-    } catch (error) {
-      console.error("Failed to save tile:", error);
-
-      setTiles(previousTiles);
-
-      setFormState(
-        isEditing
-          ? {
-              mode: "edit",
-              tile,
-            }
-          : {
-              mode: "create",
-            },
-      );
-    }
+    });
   }
 
   return (
@@ -125,6 +132,7 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
 
         <button
           type="button"
+          disabled={isPending}
           onClick={() =>
             setFormState({
               mode: "create",
@@ -154,9 +162,21 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
         </Modal>
       )}
 
+      <div className="mb-4 min-h-6">
+        {isPending && (
+          <p className="text-sm text-neutral-400">Saving changes...</p>
+        )}
+
+        {errorMessage && (
+          <p role="alert" className="text-sm text-red-400">
+            {errorMessage}
+          </p>
+        )}
+      </div>
+
       <BentoGrid
         tiles={tiles}
-        isReordering={isReordering}
+        disabled={isPending}
         onReorderTiles={handleReorderTiles}
         onEditTile={handleEditTile}
         onDeleteTile={handleDeleteTile}
