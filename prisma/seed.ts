@@ -40,7 +40,7 @@ const tiles = [
     title: "Featured project",
     position: 1,
     content: {
-      imageUrl: "/images/project.jpg",
+      imageUrl: "/placeholder-project.jpg",
       alt: "Featured project preview",
     },
   },

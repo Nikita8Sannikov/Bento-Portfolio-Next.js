@@ -1,8 +1,10 @@
 import { PublicBentoGrid } from "@/components/bento/PublicBentoGrid";
-import { initialTiles } from "@/data/initial-tiles";
+// import { initialTiles } from "@/data/initial-tiles";
+import { getTiles } from "@/lib/tiles/get-tiles";
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const tiles = await getTiles();
   return (
     <main className="min-h-screen bg-neutral-950 px-4 py-8 text-white">
       <div className="mx-auto max-w-6xl">
@@ -32,7 +34,7 @@ export default function HomePage() {
           </Link>
         </header>
 
-        <PublicBentoGrid tiles={initialTiles} />
+        <PublicBentoGrid tiles={tiles} />
       </div>
     </main>
   );
