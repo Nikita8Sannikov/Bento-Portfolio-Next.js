@@ -15,6 +15,8 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
   const [type, setType] = useState<TileType>(initialTile?.type ?? "text");
   const [size, setSize] = useState<TileSize>(initialTile?.size ?? "square");
   const [title, setTitle] = useState(initialTile?.title ?? "");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [text, setText] = useState(
     initialTile?.type === "text" ? initialTile.text : "",
@@ -40,6 +42,47 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
   const [label, setLabel] = useState(
     initialTile?.type === "map" ? initialTile.label : "",
   );
+
+  async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setUploadError(null);
+    setIsUploadingImage(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/uploads/images", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result: unknown = await response.json();
+
+      if (
+        !response.ok ||
+        typeof result !== "object" ||
+        result === null ||
+        !("imageUrl" in result) ||
+        typeof result.imageUrl !== "string"
+      ) {
+        throw new Error("Image upload failed");
+      }
+
+      setImageUrl(result.imageUrl);
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+
+      setUploadError("Не удалось загрузить изображение.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,7 +166,7 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
         break;
     }
 
-    onSubmit(newTile)
+    onSubmit(newTile);
   }
 
   return (
@@ -213,6 +256,25 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
 
         {type === "image" && (
           <div className="mb-6 space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm text-neutral-300">
+                Upload image
+              </span>
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                disabled={isUploadingImage}
+                onChange={handleImageUpload}
+                className="
+      block w-full text-sm text-neutral-400
+      file:mr-4 file:rounded-lg file:border-0
+      file:bg-white file:px-4 file:py-2
+      file:font-medium file:text-black
+      disabled:opacity-50
+    "
+              />
+            </label>
             <div>
               <label
                 htmlFor="tile-image-url"
@@ -248,6 +310,15 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
                 className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
               />
             </div>
+            {isUploadingImage && (
+              <p className="text-sm text-neutral-400">Uploading image...</p>
+            )}
+
+            {uploadError && (
+              <p role="alert" className="text-sm text-red-400">
+                {uploadError}
+              </p>
+            )}
           </div>
         )}
 
@@ -361,10 +432,18 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
 
         <button
           type="submit"
-          disabled={!title.trim()}
-          className="rounded-xl bg-white px-4 py-2 font-medium text-black disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={isUploadingImage}
+          className="
+    rounded-xl bg-white px-4 py-2 text-black
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+  "
         >
-          {initialTile ? "Save changes" : "Create tile"}
+          {isUploadingImage
+            ? "Uploading image..."
+            : initialTile
+              ? "Save changes"
+              : "Create tile"}
         </button>
       </div>
     </form>
