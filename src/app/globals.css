@@ -24,3 +24,66 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.maplibregl-map {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.maplibregl-canvas-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.maplibregl-canvas {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.maplibregl-marker {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  will-change: transform;
+}
+
+.maplibregl-control-container {
+  position: static;
+}
+
+.maplibregl-ctrl-top-left,
+.maplibregl-ctrl-top-right,
+.maplibregl-ctrl-bottom-left,
+.maplibregl-ctrl-bottom-right {
+  position: absolute !important;
+  z-index: 2;
+}
+
+.maplibregl-ctrl-top-left {
+  top: 0;
+  left: 0;
+}
+
+.maplibregl-ctrl-top-right {
+  top: 0;
+  right: 0;
+}
+
+.maplibregl-ctrl-bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+.maplibregl-ctrl-bottom-right {
+  right: 0;
+  bottom: 0;
+}

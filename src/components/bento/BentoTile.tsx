@@ -2,7 +2,7 @@ import type { BentoTile as BentoTileData } from "@/types/bento";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { BentoTileView } from "./BentoTileView";
-import { tileSizeClasses } from "./tile-size-classes";
+import { getTileSizeClass } from "./tile-size-classes";
 
 type BentoTileProps = {
   tile: BentoTileData;
@@ -11,8 +11,13 @@ type BentoTileProps = {
   onDelete: (id: string) => void;
 };
 
-export function BentoTile({ tile, disabled, onEdit, onDelete }: BentoTileProps) {
-  const sizeClass = tileSizeClasses[tile.size];
+export function BentoTile({
+  tile,
+  disabled,
+  onEdit,
+  onDelete,
+}: BentoTileProps) {
+  const sizeClass = getTileSizeClass(tile);
   const {
     attributes,
     listeners,

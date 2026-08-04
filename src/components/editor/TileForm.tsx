@@ -1,5 +1,11 @@
 import { BentoTile, TileSize, TileType } from "@/types/bento";
-import { useState } from "react";
+import {
+  GeocodingResult,
+  geocodingResultSchema,
+  geocodingResultsSchema,
+} from "@/types/geocoding";
+import { useCallback, useState } from "react";
+import { MapPicker } from "../map/MapPicker";
 
 type TileFormProps = {
   initialTile?: BentoTile;
@@ -17,7 +23,13 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
   const [title, setTitle] = useState(initialTile?.title ?? "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationResults, setLocationResults] = useState<GeocodingResult[]>([]);
 
+  const [locationQuery, setLocationQuery] = useState(
+    initialTile?.type === "map" ? initialTile.label : "",
+  );
   const [text, setText] = useState(
     initialTile?.type === "text" ? initialTile.text : "",
   );
@@ -34,14 +46,80 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
     initialTile?.type === "link" ? initialTile.description : "",
   );
   const [latitude, setLatitude] = useState(
-    initialTile?.type === "map" ? String(initialTile.latitude) : "",
+    initialTile?.type === "map" ? initialTile.latitude : "",
   );
   const [longitude, setLongitude] = useState(
-    initialTile?.type === "map" ? String(initialTile.longitude) : "",
+    initialTile?.type === "map" ? initialTile.longitude : "",
   );
   const [label, setLabel] = useState(
     initialTile?.type === "map" ? initialTile.label : "",
   );
+
+  const handleCoordinatesChange = useCallback(
+    (coordinates: { latitude: number; longitude: number }) => {
+      setLatitude(String(coordinates.latitude));
+      setLongitude(String(coordinates.longitude));
+    },
+    [],
+  );
+
+  async function handleLocationSearch() {
+    const query = locationQuery.trim();
+    setLocationResults([]);
+
+    if (query.length < 2) {
+      setLocationError("Введите название города.");
+
+      return;
+    }
+
+    setLocationError(null);
+    setIsSearchingLocation(true);
+
+    try {
+      const response = await fetch(
+        `/api/geocoding/search?q=${encodeURIComponent(query)}`,
+      );
+
+      const result: unknown = await response.json();
+
+      if (!response.ok) {
+        const message =
+          typeof result === "object" &&
+          result !== null &&
+          "error" in result &&
+          typeof result.error === "string"
+            ? result.error
+            : "Location search failed";
+
+        throw new Error(message);
+      }
+
+      const parsedResult = geocodingResultsSchema.safeParse(result);
+
+      if (!parsedResult.success) {
+        throw new Error("Invalid geocoding response");
+      }
+
+      setLocationResults(parsedResult.data);
+    } catch (error) {
+      console.error("Failed to search location:", error);
+
+      setLocationError(
+        error instanceof Error ? error.message : "Не удалось найти город.",
+      );
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  }
+
+  function handleSelectLocation(result: GeocodingResult) {
+    setLatitude(result.latitude);
+    setLongitude(result.longitude);
+    setLabel(result.label);
+    setLocationQuery(result.label);
+    setLocationResults([]);
+  }
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -111,8 +189,8 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
 
       if (
         !label.trim() ||
-        latitude.trim() === "" ||
-        longitude.trim() === "" ||
+        String(latitude).trim() === "" ||
+        String(longitude).trim() === "" ||
         Number.isNaN(parsedLatitude) ||
         Number.isNaN(parsedLongitude)
       ) {
@@ -358,7 +436,7 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
           </div>
         )}
 
-        {type === "map" && (
+        {/* {type === "map" && (
           <div className="mb-6 space-y-4">
             <div>
               <label
@@ -416,6 +494,163 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
                   className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
                 />
               </div>
+            </div>
+          </div>
+        )} */}
+        {type === "map" && (
+          <div className="space-y-5">
+            <div>
+              <label
+                htmlFor="location-query"
+                className="mb-2 block text-sm text-neutral-300"
+              >
+                City or location
+              </label>
+
+              <div className="flex gap-2">
+                <input
+                  id="location-query"
+                  type="search"
+                  value={locationQuery}
+                  onChange={(event) => setLocationQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void handleLocationSearch();
+                    }
+                  }}
+                  placeholder="Novi Sad"
+                  className="
+            min-w-0 flex-1 rounded-xl
+            border border-neutral-700
+            bg-neutral-950 px-4 py-3
+            text-white placeholder:text-neutral-600
+          "
+                />
+                {locationResults.length > 0 && (
+                  <ul
+                    className="
+    mt-2 overflow-hidden rounded-xl
+    border border-neutral-700
+    bg-neutral-950
+  "
+                  >
+                    {locationResults.map((result) => (
+                      <li key={result.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectLocation(result)}
+                          className="
+            block w-full border-b border-neutral-800
+            px-4 py-3 text-left text-sm
+            text-neutral-200
+            last:border-b-0
+            hover:bg-neutral-900
+          "
+                        >
+                          {result.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <button
+                  type="button"
+                  disabled={isSearchingLocation}
+                  onClick={() => void handleLocationSearch()}
+                  className="
+            rounded-xl border border-neutral-700
+            px-4 py-3 text-sm
+            hover:border-neutral-500
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+          "
+                >
+                  {isSearchingLocation ? "Finding..." : "Find"}
+                </button>
+              </div>
+
+              {locationError && (
+                <p role="alert" className="mt-2 text-sm text-red-400">
+                  {locationError}
+                </p>
+              )}
+            </div>
+
+            <MapPicker
+              latitude={Number(latitude)}
+              longitude={Number(longitude)}
+              onCoordinatesChange={handleCoordinatesChange}
+            />
+
+            <p className="text-sm text-neutral-400">
+              Click the map or drag the marker to choose a more precise
+              position.
+            </p>
+
+            <label className="block">
+              <span className="mb-2 block text-sm text-neutral-300">
+                Display label
+              </span>
+
+              <input
+                type="text"
+                value={label}
+                onChange={(event) => setLabel(event.target.value)}
+                required
+                placeholder="Novi Sad, Serbia"
+                className="
+          w-full rounded-xl border
+          border-neutral-700 bg-neutral-950
+          px-4 py-3 text-white
+          placeholder:text-neutral-600
+        "
+              />
+            </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-2 block text-sm text-neutral-300">
+                  Latitude
+                </span>
+
+                <input
+                  type="number"
+                  value={latitude}
+                  onChange={(event) => setLatitude(event.target.value)}
+                  min={-90}
+                  max={90}
+                  step="any"
+                  required
+                  className="
+            w-full rounded-xl border
+            border-neutral-700 bg-neutral-950
+            px-4 py-3 text-white
+          "
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm text-neutral-300">
+                  Longitude
+                </span>
+
+                <input
+                  type="number"
+                  value={longitude}
+                  onChange={(event) => Number(event.target.value)}
+                  min={-180}
+                  max={180}
+                  step="any"
+                  required
+                  className="
+            w-full rounded-xl border
+            border-neutral-700 bg-neutral-950
+            px-4 py-3 text-white
+          "
+                />
+              </label>
             </div>
           </div>
         )}

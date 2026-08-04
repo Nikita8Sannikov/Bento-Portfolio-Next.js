@@ -5,7 +5,7 @@ import { TextTileContent } from "@/components/bento/content/TextTileContent";
 import type { BentoTile } from "@/types/bento";
 import { assertNever } from "@/utils/assert-never";
 
-import { tileSizeClasses } from "@/components/bento/tile-size-classes";
+import { getTileSizeClass } from "./tile-size-classes";
 
 type BentoTileViewProps = {
   tile: BentoTile;
@@ -39,9 +39,7 @@ export function BentoTileView({
   children,
   applyGridSize = true,
 }: BentoTileViewProps) {
-    const sizeClass = applyGridSize
-    ? tileSizeClasses[tile.size]
-    : "";
+  const sizeClass = applyGridSize ? getTileSizeClass(tile) : "";
 
   return (
     <article
@@ -56,9 +54,9 @@ export function BentoTileView({
 
       <header className="mb-4 pr-28">
         <p className="text-sm uppercase tracking-wide text-neutral-400">
-        {tile.type}
-      </p>
-      <h2 className="mt-2 pr-16 text-xl font-semibold">{tile.title}</h2>
+          {tile.type}
+        </p>
+        <h2 className="mt-2 pr-16 text-xl font-semibold">{tile.title}</h2>
       </header>
 
       <div className="min-h-0 flex-1">{renderTileContent(tile)}</div>
