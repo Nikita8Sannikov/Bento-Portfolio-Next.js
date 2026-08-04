@@ -13,15 +13,12 @@ type BentoTileViewProps = {
   children?: React.ReactNode;
   applyGridSize?: boolean;
 };
-
 function renderTileContent(tile: BentoTile) {
   switch (tile.type) {
     case "text":
       return <TextTileContent tile={tile} />;
-
     case "image":
       return <ImageTileContent tile={tile} />;
-
     case "link":
       return <LinkTileContent tile={tile} />;
 
@@ -41,6 +38,8 @@ export function BentoTileView({
 }: BentoTileViewProps) {
   const sizeClass = applyGridSize ? getTileSizeClass(tile) : "";
 
+  const isMap = tile.type === "map";
+
   return (
     <article
       className={`
@@ -52,13 +51,19 @@ export function BentoTileView({
     >
       {children}
 
-      <header className="mb-4 pr-28">
-        <p className="text-sm uppercase tracking-wide text-neutral-400">
-          {tile.type}
-        </p>
-        <h2 className="mt-2 pr-16 text-xl font-semibold">{tile.title}</h2>
-      </header>
+      <header className={`shrink-0 pr-28 ${isMap ? "mb-2" : "mb-4"}`}>
+        {!isMap && (
+          <p className="text-sm uppercase tracking-wide text-neutral-400">
+            {tile.type}
+          </p>
+        )}
 
+        <h2
+          className={`font-semibold pr-16 ${isMap ? "text-lg" : "mt-2 text-xl"}`}
+        >
+          {tile.title}
+        </h2>
+      </header>
       <div className="min-h-0 flex-1">{renderTileContent(tile)}</div>
     </article>
   );

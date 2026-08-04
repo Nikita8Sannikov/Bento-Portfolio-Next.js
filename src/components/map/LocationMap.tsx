@@ -51,7 +51,7 @@ export function LocationMap({ latitude, longitude, label }: LocationMapProps) {
   }, [latitude, longitude]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl">
+    <div className="relative h-full w-full overflow-hidden">
       <div
         ref={containerRef}
         className="h-full w-full"

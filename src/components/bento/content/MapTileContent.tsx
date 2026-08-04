@@ -8,16 +8,8 @@ type MapTileContentProps = {
 export function MapTileContent({
   tile,
 }: MapTileContentProps) {
-  const heightClass = {
-    square: "h-32",
-    wide: "h-20",
-    tall: "h-70",
-  }[tile.size];
-
   return (
-    <div
-      className={`w-full overflow-hidden rounded-2xl ${heightClass}`}
-    >
+    <div className="h-full min-h-0 overflow-hidden rounded-2xl">
       <LocationMap
         latitude={tile.latitude}
         longitude={tile.longitude}
