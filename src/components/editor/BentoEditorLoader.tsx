@@ -22,11 +22,13 @@ const BentoEditor = dynamic(
 );
 
 type BentoEditorLoaderProps = {
+  portfolioId: string;
   initialTiles: BentoTile[];
 };
 
 export function BentoEditorLoader({
+  portfolioId,
   initialTiles,
 }: BentoEditorLoaderProps) {
-  return <BentoEditor initialTiles={initialTiles} />;
+  return <BentoEditor portfolioId={portfolioId} initialTiles={initialTiles} />;
 }

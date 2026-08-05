@@ -14,6 +14,7 @@ import {
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
+  portfolioId: string;
 };
 
 type TileFormState =
@@ -21,7 +22,7 @@ type TileFormState =
   | { mode: "create" }
   | { mode: "edit"; tile: BentoTile };
 
-export function BentoEditor({ initialTiles }: BentoEditorProps) {
+export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
   const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
   const [formState, setFormState] = useState<TileFormState>({ mode: "closed" });
   const [isPending, startTransition] = useTransition();
@@ -39,7 +40,7 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
 
     startTransition(async () => {
       try {
-        await reorderTilesAction(reorderedTiles);
+        await reorderTilesAction(reorderedTiles, portfolioId);
         // setIsReordering(true);
       } catch (error) {
         console.error("Failed to reorder tiles:", error);
@@ -66,7 +67,7 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
 
     startTransition(async () => {
       try {
-        await deleteTileAction(id);
+        await deleteTileAction(id, portfolioId);
       } catch (e) {
         console.error("Failed to delete tile:", e);
 
@@ -104,9 +105,9 @@ export function BentoEditor({ initialTiles }: BentoEditorProps) {
     startTransition(async () => {
       try {
         if (isEditing) {
-          await updateTileAction(tile);
+          await updateTileAction(tile, portfolioId);
         } else {
-          await createTileAction(tile);
+          await createTileAction(tile, portfolioId);
         }
       } catch (error) {
         console.error("Failed to save tile:", error);
