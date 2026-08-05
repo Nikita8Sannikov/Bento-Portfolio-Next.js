@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { PublicBentoGrid } from "@/components/bento/PublicBentoGrid";
 import { getPortfolioBySlug } from "@/data/portfolios/get-portfolio-by-slug";
+import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
 import Link from "next/link";
 
 export const revalidate = 3600;
@@ -13,6 +15,62 @@ type PortfolioPageProps = {
     slug: string;
   }>;
 };
+
+export async function generateMetadata({
+    params,
+  }: PortfolioPageProps): Promise<Metadata> {
+    const { slug } = await params;
+  
+    const portfolio = await getPortfolioBySlug(slug, {
+      publishedOnly: true,
+    });
+  
+    if (!portfolio) {
+      return {
+        title: "Portfolio not found",
+  
+        robots: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
+  
+    const title =
+      `${portfolio.title} — Fullstack Developer`;
+  
+    const description =
+      portfolio.description ??
+      siteConfig.description;
+  
+    return {
+      title,
+      description,
+  
+      alternates: {
+        canonical: `/${portfolio.slug}`,
+      },
+  
+      openGraph: {
+        type: "website",
+        url: `/${portfolio.slug}`,
+        title,
+        description,
+        siteName: siteConfig.name,
+      },
+  
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+      },
+  
+      robots: {
+        index: true,
+        follow: true,
+      },
+    };
+  }
 
 export default async function PortfolioPage({
   params,
