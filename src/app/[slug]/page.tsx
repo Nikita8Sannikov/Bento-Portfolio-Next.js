@@ -1,8 +1,12 @@
 import { notFound } from "next/navigation";
-
 import { PublicBentoGrid } from "@/components/bento/PublicBentoGrid";
 import { getPortfolioBySlug } from "@/data/portfolios/get-portfolio-by-slug";
 import Link from "next/link";
+
+export const revalidate = 3600;
+export async function generateStaticParams() {
+  return [];
+}
 
 type PortfolioPageProps = {
   params: Promise<{
