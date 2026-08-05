@@ -25,6 +25,19 @@ enum TileSize {
   tall
 }
 
+model Portfolio {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String?
+  isPublished Boolean @default(true)
+
+  tiles Tile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Tile {
   id       String   @id
   type     TileType
@@ -33,8 +46,11 @@ model Tile {
   position Int
   content  Json
 
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([position])
+  @@unique([portfolioId, position])
 }

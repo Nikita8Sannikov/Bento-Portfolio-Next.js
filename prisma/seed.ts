@@ -22,6 +22,24 @@ const prisma = new PrismaClient({
   adapter,
 });
 
+const portfolio = await prisma.portfolio.upsert({
+  where: {
+    slug: "nikita",
+  },
+
+  update: {
+    title: "Nikita",
+    isPublished: true,
+  },
+
+  create: {
+    id: "portfolio_nikita",
+    slug: "nikita",
+    title: "Nikita",
+    isPublished: true,
+  },
+});
+
 const tiles = [
   {
     id: "about",
@@ -73,9 +91,11 @@ async function main() {
   await prisma.tile.deleteMany();
 
   await prisma.tile.createMany({
-    data: tiles,
+    data: tiles.map((tile) => ({
+      ...tile,
+      portfolioId: portfolio.id,
+    })),
   });
-
   console.log(`Seeded ${tiles.length} tiles`);
 }
 
