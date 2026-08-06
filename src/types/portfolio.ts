@@ -5,6 +5,8 @@ export type PortfolioData = {
   slug: string;
   title: string;
   description: string | null;
+  position: string | null;
+  avatarUrl: string | null;
   isPublished: boolean;
   tiles: BentoTile[];
 };

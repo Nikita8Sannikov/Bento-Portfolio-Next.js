@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { PublicBentoGrid } from "@/components/bento/PublicBentoGrid";
+import { PortfolioProfile } from "@/components/portfolio/PortfolioProfile";
+import { PortfolioShell } from "@/components/portfolio/PortfolioShell";
 import { getPortfolioBySlug } from "@/data/portfolios/get-portfolio-by-slug";
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
@@ -37,7 +39,9 @@ export async function generateMetadata({
     }
   
     const title =
-      `${portfolio.title} — Fullstack Developer`;
+      portfolio.position
+        ? `${portfolio.title} — ${portfolio.position}`
+        : portfolio.title;
   
     const description =
       portfolio.description ??
@@ -87,21 +91,8 @@ export default async function PortfolioPage({
 
   return (
     <main className="min-h-screen bg-neutral-950 px-4 py-8 text-white">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-sm text-neutral-400">Fullstack Developer</p>
-
-            <h1 className="mt-2 text-4xl font-bold tracking-tight md:text-6xl">
-              Nikita
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-neutral-400">
-              I build web applications and API integrations using TypeScript,
-              React, Next.js and Node.js.
-            </p>
-          </div>
-
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex justify-end">
           <Link
             href="/admin"
             className="
@@ -112,9 +103,13 @@ export default async function PortfolioPage({
           >
             Open editor
           </Link>
-        </header>
+        </div>
 
-        <PublicBentoGrid tiles={portfolio.tiles} />
+        <PortfolioShell
+          sidebar={<PortfolioProfile portfolio={portfolio} />}
+        >
+          <PublicBentoGrid tiles={portfolio.tiles} />
+        </PortfolioShell>
       </div>
     </main>
   );

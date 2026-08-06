@@ -2,9 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { BentoGrid } from "../bento/BentoGrid";
+import { PortfolioProfileEditor } from "./PortfolioProfileEditor";
 import { TileForm } from "./TileForm";
 import { Modal } from "../ui/Modal";
+import { PortfolioShell } from "../portfolio/PortfolioShell";
 import { BentoTile } from "@/types/bento";
+import type { PortfolioData } from "@/types/portfolio";
 import {
   createTileAction,
   deleteTileAction,
@@ -14,7 +17,10 @@ import {
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
-  portfolioId: string;
+  portfolio: Pick<
+    PortfolioData,
+    "id" | "title" | "position" | "description" | "avatarUrl"
+  >;
 };
 
 type TileFormState =
@@ -22,7 +28,7 @@ type TileFormState =
   | { mode: "create" }
   | { mode: "edit"; tile: BentoTile };
 
-export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
+export function BentoEditor({ initialTiles, portfolio }: BentoEditorProps) {
   const [tiles, setTiles] = useState<BentoTile[]>(initialTiles);
   const [formState, setFormState] = useState<TileFormState>({ mode: "closed" });
   const [isPending, startTransition] = useTransition();
@@ -40,7 +46,7 @@ export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
 
     startTransition(async () => {
       try {
-        await reorderTilesAction(reorderedTiles, portfolioId);
+        await reorderTilesAction(reorderedTiles, portfolio.id);
         // setIsReordering(true);
       } catch (error) {
         console.error("Failed to reorder tiles:", error);
@@ -67,7 +73,7 @@ export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
 
     startTransition(async () => {
       try {
-        await deleteTileAction(id, portfolioId);
+        await deleteTileAction(portfolio.id, id);
       } catch (e) {
         console.error("Failed to delete tile:", e);
 
@@ -105,9 +111,9 @@ export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
     startTransition(async () => {
       try {
         if (isEditing) {
-          await updateTileAction(tile, portfolioId);
+          await updateTileAction(tile, portfolio.id);
         } else {
-          await createTileAction(tile, portfolioId);
+          await createTileAction(tile, portfolio.id);
         }
       } catch (error) {
         console.error("Failed to save tile:", error);
@@ -123,13 +129,11 @@ export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
   }
 
   return (
-    <>
-      <header className="mb-8 flex items-center justify-between">
-        <div>
-          <p className="text-sm text-neutral-400">Bento Portfolio</p>
-          <h1 className="text-3xl font-bold">Portfolio editor</h1>
-          <p className="mt-2 text-sm text-neutral-500">{tiles.length} tiles</p>
-        </div>
+    <PortfolioShell
+      sidebar={<PortfolioProfileEditor portfolio={portfolio} />}
+    >
+      <div className="mb-6 flex items-center justify-between">
+        <p className="text-sm text-neutral-500">{tiles.length} tiles</p>
 
         <button
           type="button"
@@ -143,7 +147,7 @@ export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
         >
           Add tile
         </button>
-      </header>
+      </div>
 
       {formState.mode !== "closed" && (
         <Modal
@@ -182,6 +186,6 @@ export function BentoEditor({ initialTiles, portfolioId }: BentoEditorProps) {
         onEditTile={handleEditTile}
         onDeleteTile={handleDeleteTile}
       />
-    </>
+    </PortfolioShell>
   );
 }

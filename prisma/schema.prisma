@@ -30,6 +30,8 @@ model Portfolio {
   slug        String  @unique
   title       String
   description String?
+  position    String?
+  avatarUrl   String?
   isPublished Boolean @default(true)
 
   tiles Tile[]

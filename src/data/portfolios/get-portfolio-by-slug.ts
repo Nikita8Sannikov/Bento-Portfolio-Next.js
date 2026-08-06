@@ -41,6 +41,8 @@ export async function getPortfolioBySlug(
     slug: portfolio.slug,
     title: portfolio.title,
     description: portfolio.description,
+    position: portfolio.position,
+    avatarUrl: portfolio.avatarUrl,
     isPublished: portfolio.isPublished,
 
     tiles: portfolio.tiles.map(mapDatabaseTile),

@@ -29,6 +29,9 @@ const portfolio = await prisma.portfolio.upsert({
 
   update: {
     title: "Nikita",
+    position: "Fullstack Developer",
+    description:
+      "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
     isPublished: true,
   },
 
@@ -36,6 +39,9 @@ const portfolio = await prisma.portfolio.upsert({
     id: "portfolio_nikita",
     slug: "nikita",
     title: "Nikita",
+    position: "Fullstack Developer",
+    description:
+      "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
     isPublished: true,
   },
 });

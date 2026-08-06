@@ -20,7 +20,7 @@ export default async function AdminPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-neutral-950 px-4 py-8 text-white">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <nav className="mb-6 flex justify-between">
           <Link
             href="/"
@@ -45,7 +45,13 @@ export default async function AdminPage() {
 
         {/* <BentoEditor initialTiles={initialTiles} /> */}
         <BentoEditorLoader
-          portfolioId={portfolio.id}
+          portfolio={{
+            id: portfolio.id,
+            title: portfolio.title,
+            position: portfolio.position,
+            description: portfolio.description,
+            avatarUrl: portfolio.avatarUrl,
+          }}
           initialTiles={portfolio.tiles}
         />
       </div>

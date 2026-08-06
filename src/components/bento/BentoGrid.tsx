@@ -83,7 +83,7 @@ export function BentoGrid({
         items={tiles.map((tile) => tile.id)}
         strategy={rectSortingStrategy}
       >
-        <section className="grid auto-rows-[12rem] grid-cols-1 gap-4 md:grid-cols-4">
+        <section className="grid auto-rows-[12rem] grid-cols-1 gap-4 md:grid-cols-3">
           {tiles.map((tile) => (
             <BentoTile
               key={tile.id}
