@@ -36,19 +36,21 @@ export function ImageTileContent({
   linkable = false,
 }: ImageTileContentProps) {
   const imageBlock = (
-    <div className="relative h-full min-h-32 overflow-hidden rounded-2xl bg-neutral-800">
+    <div className="relative h-full min-h-32 overflow-hidden bg-neutral-800">
       <ImageElement tile={tile} />
     </div>
   );
 
   if (linkable && tile.url) {
+    const linkLabel = tile.title.trim() || tile.alt;
+
     return (
       <a
         href={tile.url}
         target="_blank"
         rel="noopener noreferrer"
         className="block h-full cursor-pointer transition hover:opacity-90"
-        aria-label={`Open link for ${tile.title}`}
+        aria-label={`Open link for ${linkLabel}`}
       >
         {imageBlock}
       </a>

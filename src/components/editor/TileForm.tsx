@@ -1,4 +1,5 @@
 import { BentoTile, TileSize, TileType } from "@/types/bento";
+import { getTileDisplayName } from "@/lib/tiles/get-tile-display-name";
 import {
   GeocodingResult,
   geocodingResultSchema,
@@ -170,10 +171,6 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
 
     const trimmedTitle = title.trim();
 
-    if (!trimmedTitle) {
-      return;
-    }
-
     if (type === "text" && !text.trim()) {
       return;
     }
@@ -182,7 +179,7 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
       return;
     }
 
-    if (type === "link" && (!url.trim() || !description.trim())) {
+    if (type === "link" && !url.trim()) {
       return;
     }
 
@@ -263,7 +260,9 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
           {initialTile ? "Edit title" : "Create title"}
         </p>
         <h2 className="mt-1 text-2xl font-semibold">
-          {initialTile ? `Editing "${initialTile.title}"` : "Add new tile"}
+          {initialTile
+            ? `Editing "${getTileDisplayName(initialTile)}"`
+            : "Add new tile"}
         </h2>
       </div>
 
@@ -310,7 +309,7 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
 
       <div className="mb-6">
         <label htmlFor="tile-title" className="mb-2 block font-medium">
-          Title
+          Title (optional)
         </label>
 
         <input
@@ -446,7 +445,7 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
                 htmlFor="tile-description"
                 className="mb-2 block font-medium"
               >
-                Description
+                Description (optional)
               </label>
 
               <textarea

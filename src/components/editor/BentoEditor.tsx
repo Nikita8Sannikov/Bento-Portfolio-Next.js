@@ -15,6 +15,7 @@ import {
   updateTilesLayoutAction,
 } from "@/actions/tile-actions";
 import { placeNewTile } from "@/lib/tiles/grid-layout";
+import { getTileDisplayName } from "@/lib/tiles/get-tile-display-name";
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
@@ -190,7 +191,7 @@ export function BentoEditor({ initialTiles, portfolio }: BentoEditorProps) {
         <Modal
           title={
             formState.mode === "edit"
-              ? `Edit “${formState.tile.title}”`
+              ? `Edit “${getTileDisplayName(formState.tile)}”`
               : "Add new tile"
           }
           onClose={handleCloseForm}

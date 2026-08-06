@@ -9,7 +9,7 @@ export function MapTileContent({
   tile,
 }: MapTileContentProps) {
   return (
-    <div className="h-full min-h-0 overflow-hidden rounded-2xl">
+    <div className="h-full min-h-0 overflow-hidden">
       <LocationMap
         latitude={tile.latitude}
         longitude={tile.longitude}

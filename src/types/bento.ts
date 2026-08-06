@@ -6,33 +6,36 @@ export const tileSizeSchema = z.enum([
   "tall",
 ]);
 
-const baseTileSchema = z.object({
+const tileLayoutSchema = z.object({
   id: z.string().min(1),
-  title: z.string().trim().min(1),
   size: tileSizeSchema,
   gridCol: z.number().int().min(1).max(3),
   gridRow: z.number().int().min(1),
 });
 
-export const textTileSchema = baseTileSchema.extend({
+const optionalTitleTileSchema = tileLayoutSchema.extend({
+  title: z.string().trim(),
+});
+
+export const textTileSchema = optionalTitleTileSchema.extend({
   type: z.literal("text"),
   text: z.string(),
 });
 
-export const imageTileSchema = baseTileSchema.extend({
+export const imageTileSchema = optionalTitleTileSchema.extend({
   type: z.literal("image"),
   imageUrl: z.string().trim().min(1),
   alt: z.string().trim().min(1),
   url: z.url().optional(),
 });
 
-export const linkTileSchema = baseTileSchema.extend({
+export const linkTileSchema = optionalTitleTileSchema.extend({
   type: z.literal("link"),
   url: z.url(),
-  description: z.string(),
+  description: z.string().trim(),
 });
 
-export const mapTileSchema = baseTileSchema.extend({
+export const mapTileSchema = optionalTitleTileSchema.extend({
   type: z.literal("map"),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),

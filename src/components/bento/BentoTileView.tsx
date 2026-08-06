@@ -14,6 +14,11 @@ type BentoTileViewProps = {
   applyGridSize?: boolean;
   linkable?: boolean;
 };
+
+function isVisualTile(tile: BentoTile): tile is BentoTile & { type: "image" | "map" } {
+  return tile.type === "image" || tile.type === "map";
+}
+
 function renderTileContent(tile: BentoTile, linkable: boolean) {
   switch (tile.type) {
     case "text":
@@ -39,34 +44,38 @@ export function BentoTileView({
   linkable = false,
 }: BentoTileViewProps) {
   const sizeClass = applyGridSize ? getTileSizeClass(tile) : "";
-
-  const isMap = tile.type === "map";
+  const visual = isVisualTile(tile);
+  const hasTitle = Boolean(tile.title.trim());
+  const reserveActionsSpace = Boolean(children);
 
   return (
     <article
       className={`
         relative flex min-h-48 flex-col overflow-hidden rounded-3xl
-        border border-neutral-800 bg-neutral-900 p-6
+        border border-neutral-800 bg-neutral-900
+        ${visual ? "p-0" : "p-6"}
         ${sizeClass}
         ${className}
       `}
     >
       {children}
 
-      <header className={`shrink-0 pr-28 ${isMap ? "mb-2" : "mb-4"}`}>
-        {!isMap && (
-          <p className="text-sm uppercase tracking-wide text-neutral-400">
-            {tile.type}
-          </p>
-        )}
-
-        <h2
-          className={`font-semibold pr-16 ${isMap ? "text-lg" : "mt-2 text-xl"}`}
+      {hasTitle && (
+        <header
+          className={`shrink-0 ${reserveActionsSpace ? "pr-28" : ""} ${visual ? "px-4 py-3" : "mb-4"}`}
         >
-          {tile.title}
-        </h2>
-      </header>
-      <div className="min-h-0 flex-1">{renderTileContent(tile, linkable)}</div>
+          <h2
+            title={tile.title}
+            className={`line-clamp-2 font-semibold leading-snug ${visual ? "text-lg" : "text-xl"}`}
+          >
+            {tile.title}
+          </h2>
+        </header>
+      )}
+
+      <div className={visual ? "h-full min-h-0 flex-1" : "min-h-0 flex-1"}>
+        {renderTileContent(tile, linkable)}
+      </div>
     </article>
   );
 }
