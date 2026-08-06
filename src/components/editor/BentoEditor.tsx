@@ -11,9 +11,10 @@ import type { PortfolioData } from "@/types/portfolio";
 import {
   createTileAction,
   deleteTileAction,
-  reorderTilesAction,
   updateTileAction,
+  updateTilesLayoutAction,
 } from "@/actions/tile-actions";
+import { placeNewTile } from "@/lib/tiles/grid-layout";
 
 type BentoEditorProps = {
   initialTiles: BentoTile[];
@@ -34,25 +35,50 @@ export function BentoEditor({ initialTiles, portfolio }: BentoEditorProps) {
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  function handleReorderTiles(reorderedTiles: BentoTile[]) {
-    if (isPending) {
+  function handleLayoutChange(
+    updates: Array<{ id: string; gridCol: number; gridRow: number }>,
+  ) {
+    if (isPending || updates.length === 0) {
       return;
     }
 
     const previousTiles = tiles;
 
+    const hasChanges = updates.some((update) => {
+      const tile = tiles.find((t) => t.id === update.id);
+      return (
+        tile &&
+        (tile.gridCol !== update.gridCol || tile.gridRow !== update.gridRow)
+      );
+    });
+
+    if (!hasChanges) {
+      return;
+    }
+
+    const updateMap = new Map(
+      updates.map((update) => [update.id, update]),
+    );
+
+    const nextTiles = tiles.map((tile) => {
+      const update = updateMap.get(tile.id);
+      if (update) {
+        return { ...tile, gridCol: update.gridCol, gridRow: update.gridRow };
+      }
+      return tile;
+    });
+
     setErrorMessage(null);
-    setTiles(reorderedTiles);
+    setTiles(nextTiles);
 
     startTransition(async () => {
       try {
-        await reorderTilesAction(reorderedTiles, portfolio.id);
-        // setIsReordering(true);
+        await updateTilesLayoutAction(updates, portfolio.id);
       } catch (error) {
-        console.error("Failed to reorder tiles:", error);
+        console.error("Failed to update tile layout:", error);
 
         setTiles(previousTiles);
-        setErrorMessage("Failed to save new order");
+        setErrorMessage("Failed to save tile positions");
       }
     });
   }
@@ -93,17 +119,28 @@ export function BentoEditor({ initialTiles, portfolio }: BentoEditorProps) {
     const previousTiles = tiles;
     const previousFormState = formState;
     const isEditing = formState.mode === "edit";
+    const existingTile = isEditing
+      ? tiles.find((currentTile) => currentTile.id === tile.id)
+      : undefined;
+
+    const tileToSave = isEditing
+      ? {
+          ...tile,
+          gridCol: existingTile?.gridCol ?? 1,
+          gridRow: existingTile?.gridRow ?? 1,
+        }
+      : placeNewTile(tile, tiles);
 
     setErrorMessage(null);
 
     if (isEditing) {
       setTiles((currentTiles) =>
         currentTiles.map((currentTile) =>
-          currentTile.id === tile.id ? tile : currentTile,
+          currentTile.id === tileToSave.id ? tileToSave : currentTile,
         ),
       );
     } else {
-      setTiles((currentTiles) => [...currentTiles, tile]);
+      setTiles((currentTiles) => [...currentTiles, tileToSave]);
     }
 
     handleCloseForm();
@@ -111,9 +148,9 @@ export function BentoEditor({ initialTiles, portfolio }: BentoEditorProps) {
     startTransition(async () => {
       try {
         if (isEditing) {
-          await updateTileAction(tile, portfolio.id);
+          await updateTileAction(tileToSave, portfolio.id);
         } else {
-          await createTileAction(tile, portfolio.id);
+          await createTileAction(tileToSave, portfolio.id);
         }
       } catch (error) {
         console.error("Failed to save tile:", error);
@@ -182,7 +219,7 @@ export function BentoEditor({ initialTiles, portfolio }: BentoEditorProps) {
       <BentoGrid
         tiles={tiles}
         disabled={isPending}
-        onReorderTiles={handleReorderTiles}
+        onLayoutChange={handleLayoutChange}
         onEditTile={handleEditTile}
         onDeleteTile={handleDeleteTile}
       />

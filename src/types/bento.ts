@@ -10,6 +10,8 @@ const baseTileSchema = z.object({
   id: z.string().min(1),
   title: z.string().trim().min(1),
   size: tileSizeSchema,
+  gridCol: z.number().int().min(1).max(3),
+  gridRow: z.number().int().min(1),
 });
 
 export const textTileSchema = baseTileSchema.extend({

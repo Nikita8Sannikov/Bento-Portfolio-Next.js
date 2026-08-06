@@ -3,10 +3,15 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/require-admin";
+import {
+  canPlace,
+  findFirstFit,
+  getOccupiedCells,
+  getTileSpan,
+} from "@/lib/tiles/grid-layout";
 import { prisma } from "@/lib/prisma";
 import {
   bentoTileSchema,
-  bentoTilesSchema,
   type BentoTile,
 } from "@/types/bento";
 
@@ -68,6 +73,32 @@ function revalidateTilePages(
   revalidatePath("/admin");
 }
 
+type PortfolioLayoutTile = {
+  id: string;
+  type: BentoTile["type"];
+  size: BentoTile["size"];
+  gridCol: number;
+  gridRow: number;
+};
+
+async function getPortfolioLayoutTiles(
+  portfolioId: string,
+): Promise<PortfolioLayoutTile[]> {
+  return prisma.tile.findMany({
+    where: {
+      portfolioId,
+    },
+
+    select: {
+      id: true,
+      type: true,
+      size: true,
+      gridCol: true,
+      gridRow: true,
+    },
+  });
+}
+
 export async function deleteTileAction(
   portfolioId: string,
   tileId: string,
@@ -116,6 +147,9 @@ export async function createTileAction(
   const portfolioSlug =
     await getPortfolioSlug(portfolioId);
 
+  const existingTiles =
+    await getPortfolioLayoutTiles(portfolioId);
+
   const lastTile =
     await prisma.tile.findFirst({
       where: {
@@ -136,6 +170,14 @@ export async function createTileAction(
       ? 0
       : lastTile.position + 1;
 
+  const { colSpan, rowSpan } = getTileSpan(tile);
+  const occupied = getOccupiedCells(existingTiles);
+  const { gridCol, gridRow } = findFirstFit(
+    colSpan,
+    rowSpan,
+    occupied,
+  );
+
   await prisma.tile.create({
     data: {
       id: tile.id,
@@ -145,6 +187,8 @@ export async function createTileAction(
       size: tile.size,
       title: tile.title,
       position,
+      gridCol,
+      gridRow,
 
       content: getTileContent(tile),
     },
@@ -174,6 +218,8 @@ export async function updateTileAction(
 
       select: {
         id: true,
+        gridCol: true,
+        gridRow: true,
       },
     });
 
@@ -181,6 +227,36 @@ export async function updateTileAction(
     throw new Error(
       "Tile not found in this portfolio.",
     );
+  }
+
+  const layoutTiles =
+    await getPortfolioLayoutTiles(portfolioId);
+
+  const occupied = getOccupiedCells(
+    layoutTiles,
+    tile.id,
+  );
+
+  const { colSpan, rowSpan } = getTileSpan(tile);
+  let gridCol = existingTile.gridCol;
+  let gridRow = existingTile.gridRow;
+
+  if (
+    !canPlace(
+      gridCol,
+      gridRow,
+      colSpan,
+      rowSpan,
+      occupied,
+    )
+  ) {
+    const nextFit = findFirstFit(
+      colSpan,
+      rowSpan,
+      occupied,
+    );
+    gridCol = nextFit.gridCol;
+    gridRow = nextFit.gridRow;
   }
 
   await prisma.tile.update({
@@ -192,6 +268,8 @@ export async function updateTileAction(
       type: tile.type,
       size: tile.size,
       title: tile.title,
+      gridCol,
+      gridRow,
       content: getTileContent(tile),
     },
   });
@@ -199,92 +277,111 @@ export async function updateTileAction(
   revalidateTilePages(portfolioSlug);
 }
 
-export async function reorderTilesAction(
-  input: BentoTile[],
+export async function updateTileLayoutAction(
+  input: {
+    id: string;
+    gridCol: number;
+    gridRow: number;
+  },
   portfolioId: string,
 ): Promise<void> {
   await requireAdmin();
 
-  const tiles =
-    bentoTilesSchema.parse(input);
+  const portfolioSlug =
+    await getPortfolioSlug(portfolioId);
+
+  const layoutTiles =
+    await getPortfolioLayoutTiles(portfolioId);
+
+  const tile = layoutTiles.find(
+    (layoutTile) => layoutTile.id === input.id,
+  );
+
+  if (!tile) {
+    throw new Error(
+      "Tile not found in this portfolio.",
+    );
+  }
+
+  const occupied = getOccupiedCells(
+    layoutTiles,
+    input.id,
+  );
+
+  const { colSpan, rowSpan } = getTileSpan(tile);
+
+  if (
+    !canPlace(
+      input.gridCol,
+      input.gridRow,
+      colSpan,
+      rowSpan,
+      occupied,
+    )
+  ) {
+    throw new Error(
+      "Invalid tile placement.",
+    );
+  }
+
+  await prisma.tile.update({
+    where: {
+      id: input.id,
+    },
+
+    data: {
+      gridCol: input.gridCol,
+      gridRow: input.gridRow,
+    },
+  });
+
+  revalidateTilePages(portfolioSlug);
+}
+
+export async function updateTilesLayoutAction(
+  updates: Array<{
+    id: string;
+    gridCol: number;
+    gridRow: number;
+  }>,
+  portfolioId: string,
+): Promise<void> {
+  await requireAdmin();
+
+  if (updates.length === 0) {
+    return;
+  }
 
   const portfolioSlug =
     await getPortfolioSlug(portfolioId);
 
-  const currentTiles =
-    await prisma.tile.findMany({
-      where: {
-        portfolioId,
-      },
+  const layoutTiles =
+    await getPortfolioLayoutTiles(portfolioId);
 
-      select: {
-        id: true,
-        position: true,
-      },
-    });
-
-  const requestedIds = new Set(
-    tiles.map((tile) => tile.id),
+  const tileIds = new Set(
+    layoutTiles.map((tile) => tile.id),
   );
 
-  const currentIds = new Set(
-    currentTiles.map((tile) => tile.id),
-  );
-
-  const containsExactlyPortfolioTiles =
-    requestedIds.size === tiles.length &&
-    requestedIds.size === currentIds.size &&
-    [...requestedIds].every((id) =>
-      currentIds.has(id),
-    );
-
-  if (!containsExactlyPortfolioTiles) {
-    throw new Error(
-      "Invalid tile order for this portfolio.",
-    );
+  for (const update of updates) {
+    if (!tileIds.has(update.id)) {
+      throw new Error(
+        `Tile ${update.id} not found in this portfolio.`,
+      );
+    }
   }
 
-  const maxPosition = currentTiles.reduce(
-    (maximum, tile) =>
-      Math.max(maximum, tile.position),
-    -1,
-  );
-
-  const temporaryOffset =
-    maxPosition + currentTiles.length + 1;
-
   await prisma.$transaction(
-    async (transaction) => {
-      await transaction.tile.updateMany({
+    updates.map((update) =>
+      prisma.tile.update({
         where: {
-          portfolioId,
+          id: update.id,
         },
-
         data: {
-          position: {
-            increment: temporaryOffset,
-          },
+          gridCol: update.gridCol,
+          gridRow: update.gridRow,
         },
-      });
-
-      for (
-        let position = 0;
-        position < tiles.length;
-        position += 1
-      ) {
-        const tile = tiles[position];
-
-        await transaction.tile.update({
-          where: {
-            id: tile.id,
-          },
-
-          data: {
-            position,
-          },
-        });
-      }
-    },
+      }),
+    ),
   );
 
   revalidateTilePages(portfolioSlug);

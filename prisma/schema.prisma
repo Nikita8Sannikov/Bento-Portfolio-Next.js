@@ -46,6 +46,8 @@ model Tile {
   size     TileSize
   title    String
   position Int
+  gridCol  Int      @default(1)
+  gridRow  Int      @default(1)
   content  Json
 
   portfolioId String

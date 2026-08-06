@@ -4,7 +4,7 @@ import {
     it,
   } from "vitest";
   
-import { mapDatabaseTile } from "./map-database-tile";
+import { mapDatabaseTile, mapDatabaseTiles } from "./map-database-tile";
 
 describe("mapDatabaseTile", () => {
   it("maps an image database tile", () => {
@@ -13,17 +13,13 @@ describe("mapDatabaseTile", () => {
           type: "image",
           size: "wide",
           title: "Blue bird",
-          position: 0,
-          portfolioId: "portfolio_nikita",
-  
+          gridCol: 1,
+          gridRow: 1,
           content: {
             imageUrl:
               "http://localhost:9000/portfolio-images/tiles/bird.jpg",
             alt: "Blue bird",
           },
-  
-          createdAt: new Date(),
-          updatedAt: new Date(),
         });
   
       expect(result).toEqual({
@@ -31,6 +27,8 @@ describe("mapDatabaseTile", () => {
         type: "image",
         size: "wide",
         title: "Blue bird",
+        gridCol: 1,
+        gridRow: 1,
         imageUrl:
           "http://localhost:9000/portfolio-images/tiles/bird.jpg",
         alt: "Blue bird",
@@ -44,18 +42,46 @@ describe("mapDatabaseTile", () => {
           type: "map",
           size: "square",
           title: "Location",
-          position: 1,
-          portfolioId: "portfolio_nikita",
-  
+          gridCol: 1,
+          gridRow: 2,
           content: {
             latitude: "not-a-number",
             longitude: 19.8335,
             label: "Novi Sad",
           },
-  
-          createdAt: new Date(),
-          updatedAt: new Date(),
         }),
       ).toThrow();
+    });
+
+    it("falls back to auto layout when grid coordinates are missing", () => {
+      const tiles = mapDatabaseTiles([
+        {
+          id: "wide",
+          type: "text",
+          size: "wide",
+          title: "About",
+          position: 0,
+          content: { text: "About me" },
+        },
+        {
+          id: "square",
+          type: "text",
+          size: "square",
+          title: "Note",
+          position: 1,
+          content: { text: "Note" },
+        },
+      ]);
+
+      expect(tiles[0]).toMatchObject({
+        id: "wide",
+        gridCol: 1,
+        gridRow: 1,
+      });
+      expect(tiles[1]).toMatchObject({
+        id: "square",
+        gridCol: 3,
+        gridRow: 1,
+      });
     });
   });

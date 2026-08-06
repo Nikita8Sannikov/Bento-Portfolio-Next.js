@@ -1,12 +1,16 @@
+"use client";
+
 import type { BentoTile as BentoTileData } from "@/types/bento";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useDraggable } from "@dnd-kit/core";
+import { getGridPlacementClassName, getGridPlacementVariables } from "@/lib/tiles/grid-layout";
 import { BentoTileView } from "./BentoTileView";
-import { getTileSizeClass } from "./tile-size-classes";
 
 type BentoTileProps = {
   tile: BentoTileData;
   disabled?: boolean;
+  isDragging?: boolean;
+  isSwapTarget?: boolean;
+  isPushTarget?: boolean;
   onEdit: (tile: BentoTileData) => void;
   onDelete: (id: string) => void;
 };
@@ -14,32 +18,39 @@ type BentoTileProps = {
 export function BentoTile({
   tile,
   disabled,
+  isDragging = false,
+  isSwapTarget = false,
+  isPushTarget = false,
   onEdit,
   onDelete,
 }: BentoTileProps) {
-  const sizeClass = getTileSizeClass(tile);
   const {
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+    isDragging: isDraggableActive,
+  } = useDraggable({
     id: tile.id,
     disabled,
   });
 
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const dragging = isDragging || isDraggableActive;
+
+  function getTargetClass(): string {
+    if (isSwapTarget) {
+      return "ring-2 ring-blue-400 ring-offset-2 ring-offset-neutral-950";
+    }
+    if (isPushTarget) {
+      return "ring-2 ring-amber-400 ring-offset-2 ring-offset-neutral-950";
+    }
+    return "";
+  }
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`${sizeClass}  ${isDragging ? "z-20 opacity-60" : ""}`}
+      style={getGridPlacementVariables(tile)}
+      className={`${getGridPlacementClassName()} ${dragging ? "z-20 opacity-40" : ""} ${getTargetClass()} transition-shadow`}
     >
       <BentoTileView tile={tile} applyGridSize={false} className="h-full">
         <div className="absolute right-4 top-4 z-10  items-center flex gap-2">

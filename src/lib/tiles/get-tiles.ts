@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { mapDatabaseTile } from "@/lib/tiles/map-database-tile";
+import { mapDatabaseTiles } from "@/lib/tiles/map-database-tile";
 import type { BentoTile } from "@/types/bento";
 
 export async function getTiles(): Promise<BentoTile[]> {
@@ -11,5 +11,5 @@ export async function getTiles(): Promise<BentoTile[]> {
     },
   });
 
-  return databaseTiles.map(mapDatabaseTile);
+  return mapDatabaseTiles(databaseTiles);
 }

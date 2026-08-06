@@ -202,6 +202,8 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
       id: initialTile?.id ?? crypto.randomUUID(),
       title: trimmedTitle,
       size,
+      gridCol: initialTile?.gridCol ?? 1,
+      gridRow: initialTile?.gridRow ?? 1,
     };
 
     let newTile: BentoTile;

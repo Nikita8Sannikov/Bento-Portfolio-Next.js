@@ -16,6 +16,8 @@ import {
         type: "text",
         size: "square",
         title: "About me",
+        gridCol: 1,
+        gridRow: 1,
         text: "Fullstack developer",
       });
   
@@ -28,6 +30,8 @@ import {
         type: "text",
         size: "square",
         title: "",
+        gridCol: 1,
+        gridRow: 1,
         text: "Fullstack developer",
       });
   
@@ -40,6 +44,8 @@ import {
         type: "map",
         size: "wide",
         title: "Location",
+        gridCol: 1,
+        gridRow: 2,
         latitude: 45.2671,
         longitude: 19.8335,
         label: "Novi Sad",
@@ -54,6 +60,8 @@ import {
         type: "map",
         size: "wide",
         title: "Location",
+        gridCol: 1,
+        gridRow: 2,
         latitude: 120,
         longitude: 19.8335,
         label: "Unknown",
@@ -71,6 +79,8 @@ import {
           type: "text",
           size: "square",
           title: "About",
+          gridCol: 1,
+          gridRow: 1,
           text: "Developer",
         },
         {
@@ -78,6 +88,8 @@ import {
           type: "link",
           size: "wide",
           title: "GitHub",
+          gridCol: 1,
+          gridRow: 2,
           url: "https://github.com",
           description: "My projects",
         },

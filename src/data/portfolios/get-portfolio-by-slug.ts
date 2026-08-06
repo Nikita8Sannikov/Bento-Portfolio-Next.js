@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { mapDatabaseTile } from "@/lib/tiles/map-database-tile";
+import { mapDatabaseTiles } from "@/lib/tiles/map-database-tile";
 import type { PortfolioData } from "@/types/portfolio";
 
 type GetPortfolioOptions = {
@@ -45,6 +45,6 @@ export async function getPortfolioBySlug(
     avatarUrl: portfolio.avatarUrl,
     isPublished: portfolio.isPublished,
 
-    tiles: portfolio.tiles.map(mapDatabaseTile),
+    tiles: mapDatabaseTiles(portfolio.tiles),
   };
 }

@@ -53,6 +53,8 @@ const tiles = [
     size: TileSize.wide,
     title: "About me",
     position: 0,
+    gridCol: 1,
+    gridRow: 1,
     content: {
       text: "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
     },
@@ -63,6 +65,8 @@ const tiles = [
     size: TileSize.square,
     title: "Featured project",
     position: 1,
+    gridCol: 3,
+    gridRow: 1,
     content: {
       imageUrl: "/placeholder-project.jpg",
       alt: "Featured project preview",
@@ -73,7 +77,9 @@ const tiles = [
     type: TileType.link,
     size: TileSize.square,
     title: "GitHub",
-    position: 2,
+    position: 3,
+    gridCol: 3,
+    gridRow: 2,
     content: {
       url: "https://github.com/Nikita8Sannikov",
       description: "My projects and open-source work",
@@ -84,7 +90,9 @@ const tiles = [
     type: TileType.map,
     size: TileSize.wide,
     title: "Location",
-    position: 3,
+    position: 2,
+    gridCol: 1,
+    gridRow: 2,
     content: {
       latitude: 45.2671,
       longitude: 19.8335,
