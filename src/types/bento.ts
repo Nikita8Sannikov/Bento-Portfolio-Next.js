@@ -23,6 +23,7 @@ export const imageTileSchema = baseTileSchema.extend({
   type: z.literal("image"),
   imageUrl: z.string().trim().min(1),
   alt: z.string().trim().min(1),
+  url: z.url().optional(),
 });
 
 export const linkTileSchema = baseTileSchema.extend({

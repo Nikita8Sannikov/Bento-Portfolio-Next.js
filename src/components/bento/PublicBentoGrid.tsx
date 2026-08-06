@@ -30,7 +30,12 @@ export function PublicBentoGrid({
           style={getGridPlacementVariables(tile)}
           className={getGridPlacementClassName()}
         >
-          <BentoTileView tile={tile} applyGridSize={false} className="h-full" />
+          <BentoTileView
+            tile={tile}
+            applyGridSize={false}
+            className="h-full"
+            linkable
+          />
         </div>
       ))}
     </section>

@@ -26,6 +26,7 @@ function getTileContent(tile: BentoTile) {
       return {
         imageUrl: tile.imageUrl,
         alt: tile.alt,
+        ...(tile.url ? { url: tile.url } : {}),
       };
 
     case "link":

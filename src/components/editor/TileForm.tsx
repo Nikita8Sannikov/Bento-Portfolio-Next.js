@@ -39,6 +39,9 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
   const [alt, setAlt] = useState(
     initialTile?.type === "image" ? initialTile.alt : "",
   );
+  const [imageLinkUrl, setImageLinkUrl] = useState(
+    initialTile?.type === "image" ? (initialTile.url ?? "") : "",
+  );
   const [url, setUrl] = useState(
     initialTile?.type === "link" ? initialTile.url : "",
   );
@@ -223,6 +226,7 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
           type: "image",
           imageUrl: imageUrl.trim(),
           alt: alt.trim(),
+          ...(imageLinkUrl.trim() ? { url: imageLinkUrl.trim() } : {}),
         };
         break;
 
@@ -387,6 +391,24 @@ export function TileForm({ initialTile, onSubmit, onCancel }: TileFormProps) {
                 value={alt}
                 onChange={(event) => setAlt(event.target.value)}
                 placeholder="Project dashboard screenshot"
+                className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="tile-image-link-url"
+                className="mb-2 block font-medium"
+              >
+                Link (optional)
+              </label>
+
+              <input
+                id="tile-image-link-url"
+                type="url"
+                value={imageLinkUrl}
+                onChange={(event) => setImageLinkUrl(event.target.value)}
+                placeholder="https://example.com"
                 className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
               />
             </div>

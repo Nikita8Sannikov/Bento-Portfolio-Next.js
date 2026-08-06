@@ -34,6 +34,34 @@ describe("mapDatabaseTile", () => {
         alt: "Blue bird",
       });
     });
+
+    it("maps an image database tile with optional url", () => {
+      const result = mapDatabaseTile({
+        id: "image-2",
+        type: "image",
+        size: "square",
+        title: "Portfolio",
+        gridCol: 2,
+        gridRow: 1,
+        content: {
+          imageUrl: "https://example.com/photo.jpg",
+          alt: "Portfolio screenshot",
+          url: "https://example.com",
+        },
+      });
+
+      expect(result).toEqual({
+        id: "image-2",
+        type: "image",
+        size: "square",
+        title: "Portfolio",
+        gridCol: 2,
+        gridRow: 1,
+        imageUrl: "https://example.com/photo.jpg",
+        alt: "Portfolio screenshot",
+        url: "https://example.com",
+      });
+    });
   
     it("throws for invalid database content", () => {
     expect(() =>

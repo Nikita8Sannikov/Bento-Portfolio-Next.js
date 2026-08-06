@@ -12,13 +12,14 @@ type BentoTileViewProps = {
   className?: string;
   children?: React.ReactNode;
   applyGridSize?: boolean;
+  linkable?: boolean;
 };
-function renderTileContent(tile: BentoTile) {
+function renderTileContent(tile: BentoTile, linkable: boolean) {
   switch (tile.type) {
     case "text":
       return <TextTileContent tile={tile} />;
     case "image":
-      return <ImageTileContent tile={tile} />;
+      return <ImageTileContent tile={tile} linkable={linkable} />;
     case "link":
       return <LinkTileContent tile={tile} />;
 
@@ -35,6 +36,7 @@ export function BentoTileView({
   className = "",
   children,
   applyGridSize = true,
+  linkable = false,
 }: BentoTileViewProps) {
   const sizeClass = applyGridSize ? getTileSizeClass(tile) : "";
 
@@ -64,7 +66,7 @@ export function BentoTileView({
           {tile.title}
         </h2>
       </header>
-      <div className="min-h-0 flex-1">{renderTileContent(tile)}</div>
+      <div className="min-h-0 flex-1">{renderTileContent(tile, linkable)}</div>
     </article>
   );
 }
