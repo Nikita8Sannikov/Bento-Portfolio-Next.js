@@ -43,6 +43,23 @@ ENV S3_SECRET_KEY=build
 RUN npx prisma generate
 RUN npm run build
 
+# ----------------------------------------------------
+# Prisma migration image
+# ----------------------------------------------------
+
+    FROM base AS migrator
+
+    ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
+        
+    COPY --from=dependencies /app/node_modules ./node_modules
+    COPY package.json package-lock.json ./
+        
+    COPY prisma ./prisma
+    COPY prisma.config.ts ./
+        
+    RUN npx prisma generate
+        
+    CMD ["npx", "prisma", "migrate", "deploy"]
 
 # ----------------------------------------------------
 # Production Next.js server
@@ -68,22 +85,3 @@ USER nextjs
 EXPOSE 3000
 
 CMD ["node", "server.js"]
-
-
-# ----------------------------------------------------
-# Prisma migration image
-# ----------------------------------------------------
-
-FROM base AS migrator
-
-ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
-    
-COPY --from=dependencies /app/node_modules ./node_modules
-COPY package.json package-lock.json ./
-    
-COPY prisma ./prisma
-COPY prisma.config.ts ./
-    
-RUN npx prisma generate
-    
-CMD ["npx", "prisma", "migrate", "deploy"]
