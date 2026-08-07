@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-
+export const dynamic = "force-dynamic";
 import { siteConfig } from "@/config/site";
 import { prisma } from "@/lib/prisma";
 

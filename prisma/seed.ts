@@ -22,30 +22,6 @@ const prisma = new PrismaClient({
   adapter,
 });
 
-const portfolio = await prisma.portfolio.upsert({
-  where: {
-    slug: "nikita",
-  },
-
-  update: {
-    title: "Nikita",
-    position: "Fullstack Developer",
-    description:
-      "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
-    isPublished: true,
-  },
-
-  create: {
-    id: "portfolio_nikita",
-    slug: "nikita",
-    title: "Nikita",
-    position: "Fullstack Developer",
-    description:
-      "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
-    isPublished: true,
-  },
-});
-
 const tiles = [
   {
     id: "about",
@@ -102,7 +78,35 @@ const tiles = [
 ];
 
 async function main() {
-  await prisma.tile.deleteMany();
+  const portfolio = await prisma.portfolio.upsert({
+    where: {
+      slug: "nikita",
+    },
+
+    update: {
+      title: "Nikita",
+      position: "Fullstack Developer",
+      description:
+        "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
+      isPublished: true,
+    },
+
+    create: {
+      id: "portfolio_nikita",
+      slug: "nikita",
+      title: "Nikita",
+      position: "Fullstack Developer",
+      description:
+        "I build web applications and API integrations using TypeScript, React, Next.js and Node.js.",
+      isPublished: true,
+    },
+  });
+
+  await prisma.tile.deleteMany({
+    where: {
+      portfolioId: portfolio.id,
+    },
+  });
 
   await prisma.tile.createMany({
     data: tiles.map((tile) => ({

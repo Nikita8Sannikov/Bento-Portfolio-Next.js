@@ -14,7 +14,5 @@ export function getTileDisplayName(tile: BentoTile): string {
       return tile.text.trim().slice(0, 40) || "Text";
     case "link":
       return tile.description.trim() || tile.url;
-    default:
-      return tile.type;
   }
 }
