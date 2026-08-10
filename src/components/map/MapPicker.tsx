@@ -19,15 +19,28 @@ type MapPickerProps = Coordinates & {
   onCoordinatesChange: (coordinates: Coordinates) => void;
 };
 
+function toValidCoordinate(value: number, fallback: number) {
+  return Number.isFinite(value) ? value : fallback;
+}
+
 export function MapPicker({
   latitude,
   longitude,
   onCoordinatesChange,
 }: MapPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const onCoordinatesChangeRef = useRef(onCoordinatesChange);
+  const initialCenterRef = useRef({
+    latitude: toValidCoordinate(latitude, 0),
+    longitude: toValidCoordinate(longitude, 0),
+  });
 
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
+
+  useEffect(() => {
+    onCoordinatesChangeRef.current = onCoordinatesChange;
+  }, [onCoordinatesChange]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -36,19 +49,22 @@ export function MapPicker({
       return;
     }
 
+    const { latitude: initialLatitude, longitude: initialLongitude } =
+      initialCenterRef.current;
+
     configureMapLibre();
 
     const map = new Map({
       container,
       style: openStreetMapStyle,
-      center: [longitude, latitude],
+      center: [initialLongitude, initialLatitude],
       zoom: 12,
     });
 
     const marker = new Marker({
       draggable: true,
     })
-      .setLngLat([longitude, latitude])
+      .setLngLat([initialLongitude, initialLatitude])
       .addTo(map);
 
     map.addControl(new NavigationControl(), "top-right");
@@ -56,7 +72,7 @@ export function MapPicker({
     marker.on("dragend", () => {
       const position = marker.getLngLat();
 
-      onCoordinatesChange({
+      onCoordinatesChangeRef.current({
         latitude: position.lat,
         longitude: position.lng,
       });
@@ -70,7 +86,7 @@ export function MapPicker({
 
       marker.setLngLat([coordinates.longitude, coordinates.latitude]);
 
-      onCoordinatesChange(coordinates);
+      onCoordinatesChangeRef.current(coordinates);
     });
 
     function resizeMap() {
@@ -111,7 +127,7 @@ export function MapPicker({
       markerRef.current = null;
       mapRef.current = null;
     };
-  }, [onCoordinatesChange, latitude, longitude]);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -121,23 +137,25 @@ export function MapPicker({
       return;
     }
 
-    marker.setLngLat([longitude, latitude]);
+    const nextLatitude = toValidCoordinate(latitude, 0);
+    const nextLongitude = toValidCoordinate(longitude, 0);
+
+    marker.setLngLat([nextLongitude, nextLatitude]);
 
     map.flyTo({
-      center: [longitude, latitude],
+      center: [nextLongitude, nextLatitude],
       zoom: Math.max(map.getZoom(), 11),
       essential: true,
     });
   }, [latitude, longitude]);
 
   return (
-    <div
-      ref={containerRef}
-      className="
-        h-80 w-full overflow-hidden
-        rounded-2xl border border-neutral-700
-      "
-      aria-label="Choose location on map"
-    />
+    <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-neutral-700">
+      <div
+        ref={containerRef}
+        className="h-full w-full"
+        aria-label="Choose location on map"
+      />
+    </div>
   );
 }
