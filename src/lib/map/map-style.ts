@@ -1,27 +1,86 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type {
+  ExpressionSpecification,
+  StyleSpecification,
+} from "maplibre-gl";
 
-export const openStreetMapStyle: StyleSpecification = {
-  version: 8,
+const OPEN_FREE_MAP_LIBERTY_STYLE_URL =
+  "https://tiles.openfreemap.org/styles/liberty";
 
-  sources: {
-    "openstreetmap-tiles": {
-      type: "raster",
-      tiles: [
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      ],
-      tileSize: 256,
-      minzoom: 0,
-      maxzoom: 19,
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
-    },
-  },
+const ENGLISH_TEXT_FIELD: ExpressionSpecification = [
+  "coalesce",
+  ["get", "name:en"],
+  ["get", "name_en"],
+  ["get", "name:latin"],
+  ["get", "name"],
+];
 
-  layers: [
-    {
-      id: "openstreetmap-layer",
-      type: "raster",
-      source: "openstreetmap-tiles",
-    },
-  ],
-};
+let cachedEnglishStyle: StyleSpecification | null = null;
+let englishStylePromise: Promise<StyleSpecification> | null = null;
+
+function isRefOnlyTextField(textField: unknown): boolean {
+  return (
+    Array.isArray(textField) &&
+    textField.length === 2 &&
+    textField[0] === "to-string" &&
+    Array.isArray(textField[1]) &&
+    textField[1][0] === "get" &&
+    textField[1][1] === "ref"
+  );
+}
+
+function applyEnglishLabels(style: StyleSpecification): StyleSpecification {
+  const layers = style.layers?.map((layer) => {
+    if (layer.type !== "symbol") {
+      return layer;
+    }
+
+    const textField = layer.layout?.["text-field"];
+
+    if (textField == null || isRefOnlyTextField(textField)) {
+      return layer;
+    }
+
+    return {
+      ...layer,
+      layout: {
+        ...layer.layout,
+        "text-field": ENGLISH_TEXT_FIELD,
+      },
+    };
+  });
+
+  return {
+    ...style,
+    layers,
+  };
+}
+
+export async function getEnglishMapStyle(): Promise<StyleSpecification> {
+  if (cachedEnglishStyle) {
+    return cachedEnglishStyle;
+  }
+
+  if (!englishStylePromise) {
+    englishStylePromise = fetch(OPEN_FREE_MAP_LIBERTY_STYLE_URL)
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load map style: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const style = (await response.json()) as StyleSpecification;
+        const englishStyle = applyEnglishLabels(style);
+
+        cachedEnglishStyle = englishStyle;
+
+        return englishStyle;
+      })
+      .catch((error: unknown) => {
+        englishStylePromise = null;
+        throw error;
+      });
+  }
+
+  return englishStylePromise;
+}

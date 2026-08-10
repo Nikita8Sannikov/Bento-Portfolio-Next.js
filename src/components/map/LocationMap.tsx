@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Map, Marker } from "maplibre-gl";
 
-import { openStreetMapStyle } from "@/lib/map/map-style";
+import { getEnglishMapStyle } from "@/lib/map/map-style";
 import { configureMapLibre } from "@/lib/map/configure-maplibre";
 
 type LocationMapProps = {
@@ -22,31 +22,49 @@ export function LocationMap({ latitude, longitude, label }: LocationMapProps) {
       return;
     }
 
+    let cancelled = false;
+    let map: Map | null = null;
+    let marker: Marker | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+
     configureMapLibre();
 
-    const map = new Map({
-      container,
-      style: openStreetMapStyle,
-      center: [longitude, latitude],
-      zoom: 11,
-      interactive: false,
-      attributionControl: {
-        compact: true,
-      },
-    });
+    void getEnglishMapStyle()
+      .then((style) => {
+        if (cancelled || !containerRef.current) {
+          return;
+        }
 
-    const marker = new Marker().setLngLat([longitude, latitude]).addTo(map);
+        map = new Map({
+          container,
+          style,
+          center: [longitude, latitude],
+          zoom: 11,
+          interactive: false,
+          attributionControl: {
+            compact: true,
+          },
+        });
 
-    const resizeObserver = new ResizeObserver(() => {
-      map.resize();
-    });
+        marker = new Marker().setLngLat([longitude, latitude]).addTo(map);
 
-    resizeObserver.observe(container);
+        resizeObserver = new ResizeObserver(() => {
+          map?.resize();
+        });
+
+        resizeObserver.observe(container);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          console.error("Failed to initialize location map", error);
+        }
+      });
 
     return () => {
-      resizeObserver.disconnect();
-      marker.remove();
-      map.remove();
+      cancelled = true;
+      resizeObserver?.disconnect();
+      marker?.remove();
+      map?.remove();
     };
   }, [latitude, longitude]);
 
@@ -57,17 +75,6 @@ export function LocationMap({ latitude, longitude, label }: LocationMapProps) {
         className="h-full w-full"
         aria-label={`Map showing ${label}`}
       />
-
-      {/* <div
-        className="
-          pointer-events-none absolute
-          bottom-3 left-3 right-3 z-10
-          rounded-lg bg-black/75
-          px-3 py-2 text-sm text-white
-        "
-      >
-        {label}
-      </div> */}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
   NavigationControl,
   type MapMouseEvent,
 } from "maplibre-gl";
-import { openStreetMapStyle } from "@/lib/map/map-style";
+import { getEnglishMapStyle } from "@/lib/map/map-style";
 import { configureMapLibre } from "@/lib/map/configure-maplibre";
 
 type Coordinates = {
@@ -30,7 +30,7 @@ export function MapPicker({
 }: MapPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onCoordinatesChangeRef = useRef(onCoordinatesChange);
-  const initialCenterRef = useRef({
+  const coordinatesRef = useRef({
     latitude: toValidCoordinate(latitude, 0),
     longitude: toValidCoordinate(longitude, 0),
   });
@@ -43,86 +43,121 @@ export function MapPicker({
   }, [onCoordinatesChange]);
 
   useEffect(() => {
+    coordinatesRef.current = {
+      latitude: toValidCoordinate(latitude, 0),
+      longitude: toValidCoordinate(longitude, 0),
+    };
+  }, [latitude, longitude]);
+
+  useEffect(() => {
     const container = containerRef.current;
 
     if (!container || mapRef.current) {
       return;
     }
 
-    const { latitude: initialLatitude, longitude: initialLongitude } =
-      initialCenterRef.current;
+    let cancelled = false;
+    let firstFrame = 0;
+    let resizeObserver: ResizeObserver | null = null;
+    let map: Map | null = null;
+    let marker: Marker | null = null;
+    let resizeMap: (() => void) | null = null;
 
     configureMapLibre();
 
-    const map = new Map({
-      container,
-      style: openStreetMapStyle,
-      center: [initialLongitude, initialLatitude],
-      zoom: 12,
-    });
+    void getEnglishMapStyle()
+      .then((style) => {
+        if (cancelled || !containerRef.current) {
+          return;
+        }
 
-    const marker = new Marker({
-      draggable: true,
-    })
-      .setLngLat([initialLongitude, initialLatitude])
-      .addTo(map);
+        const {
+          latitude: initialLatitude,
+          longitude: initialLongitude,
+        } = coordinatesRef.current;
 
-    map.addControl(new NavigationControl(), "top-right");
+        map = new Map({
+          container,
+          style,
+          center: [initialLongitude, initialLatitude],
+          zoom: 12,
+        });
 
-    marker.on("dragend", () => {
-      const position = marker.getLngLat();
+        marker = new Marker({
+          draggable: true,
+        })
+          .setLngLat([initialLongitude, initialLatitude])
+          .addTo(map);
 
-      onCoordinatesChangeRef.current({
-        latitude: position.lat,
-        longitude: position.lng,
+        map.addControl(new NavigationControl(), "top-right");
+
+        marker.on("dragend", () => {
+          const position = marker?.getLngLat();
+
+          if (!position) {
+            return;
+          }
+
+          onCoordinatesChangeRef.current({
+            latitude: position.lat,
+            longitude: position.lng,
+          });
+        });
+
+        map.on("click", (event: MapMouseEvent) => {
+          const coordinates = {
+            latitude: event.lngLat.lat,
+            longitude: event.lngLat.lng,
+          };
+
+          marker?.setLngLat([coordinates.longitude, coordinates.latitude]);
+
+          onCoordinatesChangeRef.current(coordinates);
+        });
+
+        resizeMap = () => {
+          map?.resize();
+        };
+
+        firstFrame = requestAnimationFrame(() => {
+          resizeMap?.();
+
+          requestAnimationFrame(() => {
+            resizeMap?.();
+          });
+        });
+
+        map.once("load", resizeMap);
+        map.once("idle", resizeMap);
+
+        resizeObserver = new ResizeObserver(() => {
+          resizeMap?.();
+        });
+
+        resizeObserver.observe(container);
+
+        mapRef.current = map;
+        markerRef.current = marker;
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          console.error("Failed to initialize map picker", error);
+        }
       });
-    });
-
-    map.on("click", (event: MapMouseEvent) => {
-      const coordinates = {
-        latitude: event.lngLat.lat,
-        longitude: event.lngLat.lng,
-      };
-
-      marker.setLngLat([coordinates.longitude, coordinates.latitude]);
-
-      onCoordinatesChangeRef.current(coordinates);
-    });
-
-    function resizeMap() {
-      map.resize();
-    }
-
-    const firstFrame = requestAnimationFrame(() => {
-      resizeMap();
-
-      requestAnimationFrame(() => {
-        resizeMap();
-      });
-    });
-
-    map.once("load", resizeMap);
-    map.once("idle", resizeMap);
-
-    const resizeObserver = new ResizeObserver(() => {
-      resizeMap();
-    });
-
-    resizeObserver.observe(container);
-
-    mapRef.current = map;
-    markerRef.current = marker;
 
     return () => {
+      cancelled = true;
+
       cancelAnimationFrame(firstFrame);
+      resizeObserver?.disconnect();
 
-      resizeObserver.disconnect();
+      if (map && resizeMap) {
+        map.off("load", resizeMap);
+        map.off("idle", resizeMap);
+      }
 
-      map.off("load", resizeMap);
-      map.off("idle", resizeMap);
-
-      marker.remove();
-      map.remove();
+      marker?.remove();
+      map?.remove();
 
       markerRef.current = null;
       mapRef.current = null;
