@@ -2,6 +2,7 @@
 
 import type { BentoTile as BentoTileData } from "@/types/bento";
 import { useDraggable } from "@dnd-kit/core";
+import { ConfirmButton } from "react-confirm-action";
 import { getGridPlacementClassName, getGridPlacementVariables } from "@/lib/tiles/grid-layout";
 import { getTileDisplayName } from "@/lib/tiles/get-tile-display-name";
 import { BentoTileView } from "./BentoTileView";
@@ -83,15 +84,17 @@ export function BentoTile({
             Edit
           </button>
 
-          <button
-            type="button"
+          <ConfirmButton
+            action={() => onDelete(tile.id)}
+            confirmText="Confirm?"
+            pendingText="Deleting..."
+            timeout={3000}
             disabled={disabled}
-            onClick={() => onDelete(tile.id)}
             className="rounded-lg px-2 py-1 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-white"
             aria-label={`Delete ${tileName}`}
           >
             Delete
-          </button>
+          </ConfirmButton>
         </div>
       </BentoTileView>
     </div>
