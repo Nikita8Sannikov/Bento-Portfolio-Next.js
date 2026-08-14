@@ -4,6 +4,8 @@ const siteUrl =
 export const siteConfig = {
   name: "Nikita Portfolio",
 
+  defaultPortfolioSlug: "nikita",
+
   description:
     "Fullstack developer building web applications and API integrations with TypeScript, React, Next.js and Node.js.",
 

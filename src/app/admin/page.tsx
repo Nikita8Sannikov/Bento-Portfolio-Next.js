@@ -1,6 +1,7 @@
 import { logoutAction } from "@/actions/auth-actions";
 import { auth } from "@/auth";
 import { BentoEditorLoader } from "@/components/editor/BentoEditorLoader";
+import { siteConfig } from "@/config/site";
 import { getPortfolioBySlug } from "@/data/portfolios/get-portfolio-by-slug";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -12,10 +13,12 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const portfolio = await getPortfolioBySlug("nikita");
+  const portfolio = await getPortfolioBySlug(siteConfig.defaultPortfolioSlug);
 
   if (!portfolio) {
-    throw new Error('Portfolio with slug "nikita" was not found');
+    throw new Error(
+      `Portfolio with slug "${siteConfig.defaultPortfolioSlug}" was not found`,
+    );
   }
 
   return (
