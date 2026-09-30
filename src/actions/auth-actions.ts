@@ -1,12 +1,8 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
 
-import {
-  signIn,
-  signOut,
-} from "@/auth";
+import { signIn } from "@/auth";
 
 export type LoginState = {
   error: string | null;
@@ -38,15 +34,4 @@ export async function loginAction(
 
     throw error;
   }
-}
-
-export async function logoutAction(): Promise<void> {
-  // Auth.js turns redirectTo into an absolute URL from the request host.
-  // On Render that host is the internal bind address (0.0.0.0:10000), so the
-  // browser receives a cached public page instead of a sign-out redirect.
-  await signOut({
-    redirect: false,
-  });
-
-  redirect("/");
 }

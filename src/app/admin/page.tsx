@@ -1,5 +1,5 @@
-import { logoutAction } from "@/actions/auth-actions";
 import { auth } from "@/auth";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { BentoEditorLoader } from "@/components/editor/BentoEditorLoader";
 import { siteConfig } from "@/config/site";
 import { getPortfolioBySlug } from "@/data/portfolios/get-portfolio-by-slug";
@@ -32,18 +32,7 @@ export default async function AdminPage() {
             Public portfolio
           </Link>
 
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              className="
-        rounded-xl border border-neutral-700
-        px-4 py-2 text-sm text-neutral-300
-        hover:border-neutral-500 hover:text-white
-      "
-            >
-              Sign out
-            </button>
-          </form>
+          <SignOutButton />
         </nav>
 
         {/* <BentoEditor initialTiles={initialTiles} /> */}
