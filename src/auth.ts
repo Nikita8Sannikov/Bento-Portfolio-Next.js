@@ -9,6 +9,25 @@ const credentialsSchema = z.object({
   password: z.string().min(1),
 });
 
+const bcryptHashPattern = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/;
+
+function readAdminPasswordHash(value: string): string | null {
+  const trimmed = value.trim().replace(/^["']|["']$/g, "");
+  const unescaped = trimmed.replace(/\\\$/g, "$");
+
+  if (bcryptHashPattern.test(unescaped)) {
+    return unescaped;
+  }
+
+  const decoded = Buffer.from(trimmed, "base64").toString("utf8");
+
+  if (bcryptHashPattern.test(decoded)) {
+    return decoded;
+  }
+
+  return null;
+}
+
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
@@ -40,7 +59,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
 
         const adminEmail = process.env.ADMIN_EMAIL;
-        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
+          ? readAdminPasswordHash(process.env.ADMIN_PASSWORD_HASH)
+          : null;
 
         if (!adminEmail || !adminPasswordHash) {
           throw new Error("Admin credentials are not configured");
